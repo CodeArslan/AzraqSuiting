@@ -1,0 +1,21 @@
+﻿.product-card {
+    border: 1px solid #ccc;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    border-radius: 5px;
+    margin-bottom: 10px;
+    padding: 10px;
+    background-color: #fff;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.disabled-input{
+    pointer-events:none;
+    opacity:0.5;
+}
+
+.bootbox-close-button {
+    display: none !important;
+}
+
+   

@@ -1,0 +1,1411 @@
+﻿@model AzraqSuiting.ViewModels.ProductViewModel
+@{
+    ViewBag.Title = "Index";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<style>
+    .bootbox-close-button {
+        display: none !important;
+    }
+    .disabled-input {
+        pointer-events: none;
+        opacity: 0.5;
+    }
+</style>
+<div class="main-content">
+    <div class="breadcrumb">
+        <ul>
+            <li><a href="/Product/Index">Product</a></li>
+        </ul>
+    </div>
+    <div class="separator-breadcrumb border-top"></div>
+</div>
+
+<p>
+    <a class="btn btn-primary m-1" data-bs-toggle="modal" data-target="#addProduct" data-whatever="mdo">Add Product</a>
+</p>
+<div class="col-md-12 mb-3">
+
+
+    <div class="card text-start">
+
+        <div class="card-header">
+            <h4 class="text-25 text-muted">Product List</h4>
+        </div>
+        <div class="alert alert-dismissible fade show alert-card alert-success" role="alert" id="successAlert" style="display:none">
+            <strong class="text-capitalize">Success!</strong> <span id="successMessage"></span>
+            <button class="btn btn-close" type="button" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        <div class="alert alert-dismissible fade show alert-card alert-danger" role="alert" id="errorAlert" style="display:none">
+            <strong class="text-capitalize">Error!</strong> <span id="errorMessage"></span>
+            <button class="btn btn-close" type="button" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover table-bordered table-striped nowrap" id="productTable">
+                    <thead class="bg-gray-300">
+                        <tr>
+                            <th scope="col">Code</th>
+                            <th scope="col">Product Name</th>
+                            <th scope="col">Unit</th>
+                            <th scope="col">Shelf/Location</th>
+                            <th scope="col">Sale Price</th>
+                            <th scope="col">Purchase Price</th>
+                            <th scope="col">Current Stock</th>
+                            <th scope="col">Category</th>
+                            <th scope="col">Brand</th>
+                            <th scope="col">Current Value</th>
+                            <th scope="col">Average Cost</th>
+                            <th scope="col">Minimum Stock</th>
+                            <th scope="col">Date Added</th>
+                            <th scope="col">Last Updated</th>
+                            <th scope="col">Barcode</th>
+                            <th scope="col">Barcode Image</th>
+                            <th scope="col">Description</th>
+                            <th scope="col">Action</th>
+                        </tr>
+                    </thead>
+
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="addProduct" tabindex="-1" role="dialog" aria-labelledby="verifyModalContent" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="verifyModalContent_title">New Product</h5>
+                <button class="btn btn-close" type="button" data-bs-dismiss="modal" id="modal-close" aria-label="Close"></button>
+            </div>
+            @using (Ajax.BeginForm("ProductDetails", "Product", new AjaxOptions
+            {
+                HttpMethod = "POST",
+                OnBegin = "onBeginforAdd",
+                OnSuccess = "handleSuccessforAdd",
+                OnFailure = "handleFailureforAdd",
+            }, new { id = "addProductForm" }))
+            {
+                @Html.AntiForgeryToken()
+
+                <div class="modal-body">
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                @Html.HiddenFor(m => m.Product.Id, new { @id = "productId" })
+                                @Html.LabelFor(model => model.Product.Code, new { @class = "col-form-label" })
+                                @Html.TextBoxFor(model => model.Product.Code, new { @class = "form-control disabled-input", @id = "productCode", @readonly = "readonly", autocomplete = "off" })
+                                @Html.ValidationMessageFor(model => model.Product.Code, "", new { @class = "text-danger" })
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                @Html.LabelFor(model => model.Product.Name, new { @class = "col-form-label" })
+                                @Html.TextBoxFor(model => model.Product.Name, new { @class = "form-control", @id = "Name", autocomplete = "off" })
+                                @Html.ValidationMessageFor(model => model.Product.Name, "", new { @class = "text-danger" })
+                            </div>
+                        </div>
+
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                @Html.LabelFor(model => model.Product.BarCode, new { @class = "col-form-label" })
+                                <div class="input-group">
+                                    @Html.TextBoxFor(model => model.Product.BarCode, new { @class = "form-control disabled-input", @readonly = "readonly", @id = "BarCodeNumber", autocomplete = "off", @aria_describedby = "barcode-icon" })
+                                    <span class="input-group-text" id="barcode-icon">
+                                        <i class="fas fa-sync-alt" title="Regenerate Barcode" id="spinner-icon"></i>
+                                    </span>
+
+                                </div>
+                                @Html.ValidationMessageFor(model => model.Product.BarCode, "", new { @class = "text-danger" })
+                            </div>
+
+
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <div class="dropzone d-flex justify-content-center align-items-center" style="min-height:69px; position:relative;">
+                                    <div class="dz-default dz-message" id="barcodeImgMsg">
+                                        <span>Barcode Image</span>
+                                    </div>
+                                    <img id="barCodeImg" class="img-fluid" />
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                @Html.LabelFor(model => model.Product.CategoryId, new { @class = "col-form-label" })
+                                <div class="input-group mb-3">
+                                    <button class="btn btn-secondary dropdown-toggle form-control" type="button" id="categoryIdDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                        --Select--
+                                    </button>
+                                    <ul class="dropdown-menu" id="categoryDropdown" style="width:85%" aria-labelledby="categoryIdDropdown">
+                                        <li><a class="dropdown-item" href="javascript:void(0);" data-value="">--Select--</a></li>
+                                        @foreach (var category in Model.Category)
+                                        {
+                                            <li><a class="dropdown-item" href="javascript:void(0);" data-value="@category.Id">@category.Name</a></li>
+                                        }
+                                    </ul>
+
+                                    <span class="input-group-text btn btn-outline-primary" id="basic-addon2" data-bs-toggle='modal' data-target='#categoryModal' data-bs-dismiss="modal" data-whatever='mdo' title="Add Category">
+                                        
+                                            <i class="fas fa-plus"></i>
+                                        
+                                    </span>
+                                </div>
+                                @Html.HiddenFor(model => model.Product.CategoryId, new { @id = "categoryId" })
+                                @Html.ValidationMessageFor(m => m.Product.CategoryId, "", new { @class = "text-danger", @id = "errorMessageforCategory" })
+
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                @Html.LabelFor(model => model.Product.BrandId, new { @class = "col-form-label" })
+                                <div class="input-group mb-3">
+                                    <button class="btn btn-secondary dropdown-toggle form-control" type="button" id="brandIdDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                        --Select--
+                                    </button>
+                                    <ul class="dropdown-menu" id="brandDropdown" style="width:85%" aria-labelledby="brandIdDropdown">
+                                        <li><a class="dropdown-item" href="javascript:void(0);" data-value="">--Select--</a></li>
+                                        @foreach (var brand in Model.Brand)
+                                        {
+                                            <li><a class="dropdown-item" href="javascript:void(0);" data-value="@brand.Id">@brand.Name</a></li>
+                                        }
+                                    </ul>
+
+                                    <span class="input-group-text btn btn-outline-primary" id="basic-addon3" data-bs-toggle='modal' data-target='#brandModal' data-bs-dismiss="modal" data-whatever='mdo' type="button" title="Add Brand">
+                                       
+                                            <i class="fas fa-plus"></i>
+                                        
+                                    </span>
+                                </div>
+                                @Html.HiddenFor(model => model.Product.BrandId, new { @id = "brandId" })
+                                @Html.ValidationMessageFor(m => m.Product.BrandId, "", new { @class = "text-danger", @id = "errorMessageforBrand" })
+                            </div>
+
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                @Html.LabelFor(model => model.Product.Unit, new { @class = "col-form-label" })
+                                <div class="dropdown">
+                                    <button class="btn btn-secondary dropdown-toggle" style="width:100%" type="button" id="unitDropdownButton" data-bs-toggle="dropdown" aria-expanded="false">
+                                        --Select--
+                                    </button>
+                                    <ul class="dropdown-menu" style="width:100%" id="unitDropdownMenu" aria-labelledby="unitDropdownButton">
+                                        <li><a class="dropdown-item" href="javascript:void(0);" data-value="">--Select--</a></li>
+                                        <li><a class="dropdown-item" href="javascript:void(0);" data-value="Suit">Suit</a></li>
+                                        <li><a class="dropdown-item" href="javascript:void(0);" data-value="Meter">Meter</a></li>
+                                    </ul>
+
+                                </div>
+                            </div>
+                            @Html.HiddenFor(model => model.Product.Unit, new { @id = "Unit" })
+                            @Html.ValidationMessageFor(m => m.Product.Unit, "", new { @class = "text-danger", @id = "errorMessageforUnit" })
+
+
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                @Html.LabelFor(model => model.Product.LastPurchasePrice, new { @class = "col-form-label" })
+                                @Html.TextBoxFor(model => model.Product.LastPurchasePrice, new { @class = "form-control", @id = "LastPurchasePrice", autocomplete = "off" })
+                                @Html.ValidationMessageFor(model => model.Product.LastPurchasePrice, "", new { @class = "text-danger" })
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                @Html.LabelFor(model => model.Product.LatestSalePrice, new { @class = "col-form-label" })
+                                @Html.TextBoxFor(model => model.Product.LatestSalePrice, new { @class = "form-control", @id = "LatestSalePrice", autocomplete = "off" })
+                                @Html.ValidationMessageFor(model => model.Product.LatestSalePrice, "", new { @class = "text-danger" })
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                @Html.LabelFor(model => model.Product.Location, new { @class = "col-form-label" })
+                                @Html.TextBoxFor(model => model.Product.Location, new { @class = "form-control", @id = "Location", autocomplete = "off" })
+                                @Html.ValidationMessageFor(model => model.Product.Location, "", new { @class = "text-danger" })
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                @Html.LabelFor(model => model.Product.CurrentStock, new { @class = "col-form-label" })
+                                @Html.TextBoxFor(model => model.Product.CurrentStock, new { @class = "form-control", @id = "CurrentStock", autocomplete = "off" })
+                                @Html.ValidationMessageFor(model => model.Product.CurrentStock, "", new { @class = "text-danger" })
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                @Html.LabelFor(model => model.Product.CurrentValue, new { @class = "col-form-label" })
+                                @Html.TextBoxFor(model => model.Product.CurrentValue, new { @class = "form-control", @id = "CurrentValue", autocomplete = "off" })
+                                @Html.ValidationMessageFor(model => model.Product.CurrentValue, "", new { @class = "text-danger" })
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                @Html.LabelFor(model => model.Product.MinimumStock, new { @class = "col-form-label" })
+                                @Html.TextBoxFor(model => model.Product.MinimumStock, new { @class = "form-control", @id = "MinimumStock", autocomplete = "off" })
+                                @Html.ValidationMessageFor(model => model.Product.MinimumStock, "", new { @class = "text-danger" })
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                @Html.LabelFor(model => model.Product.Description, new { @class = "col-form-label" })
+                                @Html.TextAreaFor(model => model.Product.Description, new { @class = "form-control", @id = "Description", @rows = "4", autocomplete = "off" })
+                                @Html.ValidationMessageFor(model => model.Product.Description, "", new { @class = "text-danger" })
+                                @Html.HiddenFor(model => model.Product.BarcodeImagePath, new { @id = "barcodeImgPath" })
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary" type="button" id="cancel" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary" id="submitForm">Add</button>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="updateProduct" tabindex="-1" role="dialog" aria-labelledby="verifyModalContent" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="verifyModalContent_title">Update Product</h5>
+                <button class="btn btn-close" type="button" data-bs-dismiss="modal" id="modal-close" aria-label="Close"></button>
+            </div>
+            @using (Ajax.BeginForm("ProductDetails", "Product", new AjaxOptions
+            {
+                HttpMethod = "POST",
+                OnBegin = "onBeginForUpdate",
+                OnSuccess = "handleSuccessforUpdate",
+                OnFailure = "handleFailureforUpdate",
+            }, new { id = "updateProductForm" }))
+            {
+
+                <div class="modal-body">
+
+                    @Html.AntiForgeryToken()
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                @Html.HiddenFor(m => m.Product.Id, new { @id = "updateProductId" })
+                                @Html.LabelFor(model => model.Product.Code, new { @class = "col-form-label" })
+                                @Html.TextBoxFor(model => model.Product.Code, new { @class = "form-control disabled-input", @id = "updateproductCode", @readonly = "readonly", autocomplete = "off" })
+                                @Html.ValidationMessageFor(model => model.Product.Code, "", new { @class = "text-danger" })
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                @Html.LabelFor(model => model.Product.Name, new { @class = "col-form-label" })
+                                @Html.TextBoxFor(model => model.Product.Name, new { @class = "form-control", @id = "updateName", autocomplete = "off" })
+                                @Html.ValidationMessageFor(model => model.Product.Name, "", new { @class = "text-danger" })
+                            </div>
+                        </div>
+
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                @Html.LabelFor(model => model.Product.BarCode, new { @class = "col-form-label" })
+                                <div class="input-group">
+                                    @Html.TextBoxFor(model => model.Product.BarCode, new { @class = "form-control disabled-input", @readonly = "readonly", @id = "updateBarCodeNumber", autocomplete = "off", @aria_describedby = "barcode-icon" })
+                                    <span class="input-group-text" id="updatebarcode-icon">
+                                        <i class="fas fa-sync-alt" title="Regenerate Barcode" id="updatespinner-icon"></i>
+                                    </span>
+
+                                </div>
+                                @Html.ValidationMessageFor(model => model.Product.BarCode, "", new { @class = "text-danger" })
+                            </div>
+
+
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <div class="dropzone d-flex justify-content-center align-items-center" style="min-height:69px; position:relative;">
+                                    <div class="dz-default dz-message" id="updatebarcodeImgMsg">
+                                        <span>Barcode Image</span>
+                                    </div>
+                                    <img id="updatebarCodeImg" class="img-fluid" />
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                @Html.LabelFor(model => model.Product.CategoryId, new { @class = "col-form-label" })
+                                <div class="input-group mb-3">
+                                    <button class="btn btn-secondary dropdown-toggle form-control" type="button" id="updatecategoryIdDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                        --Select--
+                                    </button>
+                                    <ul class="dropdown-menu" id="updatecategoryDropdown" style="width:85%" aria-labelledby="categoryIdDropdown">
+                                        <li><a class="dropdown-item" href="javascript:void(0);" data-value="">--Select--</a></li>
+                                        @foreach (var category in Model.Category)
+                                        {
+                                            <li><a class="dropdown-item" href="javascript:void(0);" data-value="@category.Id">@category.Name</a></li>
+                                        }
+                                    </ul>
+
+                                    <span class="input-group-text btn btn-outline-primary" id="basic-addon2" data-bs-toggle='modal' data-target='#categoryModal' data-bs-dismiss="modal" data-whatever='mdo' type="button" title="Add Category">
+
+                                        <i class="fas fa-plus"></i>
+
+                                    </span>
+                                </div>
+                                @Html.HiddenFor(model => model.Product.CategoryId, new { @id = "updatecategoryId" })
+                                @Html.ValidationMessageFor(m => m.Product.CategoryId, "", new { @class = "text-danger", @id = "updateerrorMessageforCategory" })
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                @Html.LabelFor(model => model.Product.BrandId, new { @class = "col-form-label" })
+                                <div class="input-group mb-3">
+                                    <button class="btn btn-secondary dropdown-toggle form-control" type="button" id="updatebrandIdDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                        --Select--
+                                    </button>
+                                    <ul class="dropdown-menu" id="updatebrandDropdown" style="width:85%" aria-labelledby="brandIdDropdown">
+                                        <li><a class="dropdown-item" href="javascript:void(0);" data-value="">--Select--</a></li>
+                                        @foreach (var brand in Model.Brand)
+                                        {
+                                            <li><a class="dropdown-item" href="javascript:void(0);" data-value="@brand.Id">@brand.Name</a></li>
+                                        }
+                                    </ul>
+                                    <span class="input-group-text btn btn-outline-primary" id="basic-addon3" data-bs-toggle='modal' data-target='#brandModal' data-bs-dismiss="modal" data-whatever='mdo' type="button" title="Add Category">
+
+                                        <i class="fas fa-plus"></i>
+
+                                    </span>
+
+                                   
+                                </div>
+                                @Html.HiddenFor(model => model.Product.BrandId, new { @id = "updatebrandId" })
+                                @Html.ValidationMessageFor(m => m.Product.BrandId, "", new { @class = "text-danger", @id = "updateerrorMessageforBrand" })
+                            </div>
+
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                @Html.LabelFor(model => model.Product.Unit, new { @class = "col-form-label" })
+                                <div class="dropdown">
+                                    <button class="btn btn-secondary dropdown-toggle" style="width:100%" type="button" id="updateunitDropdownButton" data-bs-toggle="dropdown" aria-expanded="false">
+                                        --Select--
+                                    </button>
+                                    <ul class="dropdown-menu" style="width:100%" id="updateunitDropdownMenu" aria-labelledby="unitDropdownButton">
+                                        <li><a class="dropdown-item" href="javascript:void(0);" data-value="">--Select--</a></li>
+                                        <li><a class="dropdown-item" href="javascript:void(0);" data-value="Suit">Suit</a></li>
+                                        <li><a class="dropdown-item" href="javascript:void(0);" data-value="Meter">Meter</a></li>
+                                    </ul>
+                                    @Html.HiddenFor(model => model.Product.Unit, new { @id = "updateUnit" })
+                                    @Html.ValidationMessageFor(m => m.Product.Unit, "", new { @class = "text-danger", @id = "updateerrorMessageforUnit" })
+                                </div>
+                            </div>
+
+
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                @Html.LabelFor(model => model.Product.LastPurchasePrice, new { @class = "col-form-label" })
+                                @Html.TextBoxFor(model => model.Product.LastPurchasePrice, new { @class = "form-control", @id = "updateLastPurchasePrice", autocomplete = "off" })
+                                @Html.ValidationMessageFor(model => model.Product.LastPurchasePrice, "", new { @class = "text-danger" })
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                @Html.LabelFor(model => model.Product.LatestSalePrice, new { @class = "col-form-label" })
+                                @Html.TextBoxFor(model => model.Product.LatestSalePrice, new { @class = "form-control", @id = "updateLatestSalePrice", autocomplete = "off" })
+                                @Html.ValidationMessageFor(model => model.Product.LatestSalePrice, "", new { @class = "text-danger" })
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                @Html.LabelFor(model => model.Product.Location, new { @class = "col-form-label" })
+                                @Html.TextBoxFor(model => model.Product.Location, new { @class = "form-control", @id = "updateLocation", autocomplete = "off" })
+                                @Html.ValidationMessageFor(model => model.Product.Location, "", new { @class = "text-danger" })
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                @Html.LabelFor(model => model.Product.CurrentStock, new { @class = "col-form-label" })
+                                @Html.TextBoxFor(model => model.Product.CurrentStock, new { @class = "form-control", @id = "updateCurrentStock", autocomplete = "off" })
+                                @Html.ValidationMessageFor(model => model.Product.CurrentStock, "", new { @class = "text-danger" })
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                @Html.LabelFor(model => model.Product.CurrentValue, new { @class = "col-form-label" })
+                                @Html.TextBoxFor(model => model.Product.CurrentValue, new { @class = "form-control", @id = "updateCurrentValue", autocomplete = "off" })
+                                @Html.ValidationMessageFor(model => model.Product.CurrentValue, "", new { @class = "text-danger" })
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                @Html.LabelFor(model => model.Product.MinimumStock, new { @class = "col-form-label" })
+                                @Html.TextBoxFor(model => model.Product.MinimumStock, new { @class = "form-control", @id = "updateMinimumStock", autocomplete = "off" })
+                                @Html.ValidationMessageFor(model => model.Product.MinimumStock, "", new { @class = "text-danger" })
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                @Html.LabelFor(model => model.Product.Description, new { @class = "col-form-label" })
+                                @Html.TextAreaFor(model => model.Product.Description, new { @class = "form-control", @id = "updateDescription", @rows = "4", autocomplete = "off" })
+                                @Html.ValidationMessageFor(model => model.Product.Description, "", new { @class = "text-danger" })
+                                @Html.HiddenFor(model => model.Product.BarcodeImagePath, new { @id = "updatebarcodeImgPath" })
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary" type="button" id="cancel" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary" id="submitForm">Add</button>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="categoryModal" tabindex="-1" role="dialog" aria-labelledby="verifyModalContent" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="verifyModalContent_title">Category</h5>
+                <button class="btn btn-close" type="button" data-bs-dismiss="modal" id="modal-close" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-dismissible fade show alert-card alert-success" role="alert" id="successAlert" style="display:none">
+                    <strong class="text-capitalize">Success!</strong> <span id="successMessage"></span>
+                    <button class="btn btn-close" type="button" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+                <div class="alert alert-dismissible fade show alert-card alert-danger" role="alert" id="errorAlert" style="display:none">
+                    <strong class="text-capitalize">Error!</strong> <span id="errorMessage"></span>
+                    <button class="btn btn-close" type="button" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+                <div class="form-container">
+                    @using (Ajax.BeginForm("CategoryDetails", "Category",
+         new AjaxOptions
+         {
+             HttpMethod = "POST",
+             OnSuccess = "handleSuccessforCategory",
+             OnFailure = "handleFailureforCategory"
+         }))
+                    {
+
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    @Html.LabelFor(model => model.Categories.Name, new { @class = "col-form-label" })
+                                    @Html.TextBoxFor(model => model.Categories.Name, new { @class = "form-control", @id = "categoryName", autocomplete = "off" })
+                                    @Html.ValidationMessageFor(model => model.Categories.Name, "", new { @class = "text-danger" })
+                                    @Html.HiddenFor(model => model.Categories.Id, new { @id = "hiddenCategoryId" })
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button class="btn btn-secondary" type="button" id="cancel" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-primary">Save</button>
+                        </div>
+
+
+                    }
+                </div>
+                <div class="row mt-2">
+                    <div class="col-md-12">
+                        <div class="table-responsive">
+                            <table class="table table-hover table-bordered table-striped nowrap" id="categoryTable">
+                                <thead class="bg-gray-300">
+                                    <tr>
+                                        <th scope="col">Category</th>
+                                        <th scope="col">Action</th>
+                                    </tr>
+                                </thead>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="brandModal" tabindex="-1" role="dialog" aria-labelledby="verifyModalContent" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="verifyModalContent_title">Brand</h5>
+                <button class="btn btn-close" type="button" data-bs-dismiss="modal" id="modal-close" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-dismissible fade show alert-card alert-success" role="alert" id="SuccessAlert" style="display:none">
+                    <strong class="text-capitalize">Success!</strong> <span id="SuccessMessage"></span>
+                    <button class="btn btn-close" type="button" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+                <div class="alert alert-dismissible fade show alert-card alert-danger" role="alert" id="ErrorAlert" style="display:none">
+                    <strong class="text-capitalize">Error!</strong> <span id="ErrorMessage"></span>
+                    <button class="btn btn-close" type="button" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+                <div class="form-container">
+                    @using (Ajax.BeginForm("BrandDetails", "Product",
+                         new AjaxOptions
+                         {
+                             HttpMethod = "POST",
+                             OnSuccess = "handleSuccessforBrand",
+                             OnFailure = "handleFailureforBrand"
+                         }))
+                    {
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    @Html.LabelFor(model => model.Brands.Name, new { @class = "col-form-label" })
+                                    @Html.TextBoxFor(model => model.Brands.Name, new { @class = "form-control", @id = "brandName", autocomplete = "off" })
+                                    @Html.ValidationMessageFor(model => model.Brands.Name, "", new { @class = "text-danger" })
+                                    @Html.HiddenFor(model => model.Brands.Id, new { @id = "hiddenBrandId" })
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button class="btn btn-secondary" type="button" id="cancelBrand" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-primary">Save</button>
+                        </div>
+                    }
+                </div>
+                <div class="row mt-2">
+                    <div class="col-md-12">
+                        <div class="table-responsive">
+                            <table class="table table-hover table-bordered table-striped nowrap" id="brandTable">
+                                <thead class="bg-gray-300">
+                                    <tr>
+                                        <th scope="col">Brand</th>
+                                        <th scope="col">Action</th>
+                                    </tr>
+                                </thead>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section scripts
+{
+    <script>
+        $(document).ready(function () {
+            bindProductTable();
+            $('#addProduct').on('shown.bs.modal', function () {
+                generateBarcode();
+            });
+            $('#categoryModal').on('shown.bs.modal', function () {
+                BindCategoryList();
+            });
+            $('#categoryModal').on('hidden.bs.modal', function () {
+                $('.form-container').find('form')[0].reset();
+                $('.form-container').find('.text-danger').html('');
+                $('#hiddenCategoryId').val('');
+            });
+            $('#brandModal').on('shown.bs.modal', function () {
+                BindBrandList();
+            });
+
+            $('#brandModal').on('hidden.bs.modal', function () {
+                $('.form-container').find('form')[0].reset();
+                $('.form-container').find('.text-danger').html('');
+                $('#hiddenBrandId').val('');
+            });
+            $('#barcode-icon').click(function () {
+                generateBarcode();
+            });
+            $('#updatebarcode-icon').click(function () {
+                generateBarcodeforUpdate();
+            });
+
+            // Function to generate barcode
+            function generateBarcode() {
+                $("#spinner-icon").toggleClass('fa-spin');
+                $.ajax({
+                    url: '/Product/GenerateBarcode',
+                    type: 'GET',
+                    cache: false,
+                    beforeSend: function () {
+                        hideSpinner();
+                    },
+                    success: function (data) {
+                        $('#BarCodeNumber').val(data.BarcodeContent);
+                        $('#barCodeImg').attr('src', data.BarcodeImagePath + '?random=' + Math.random());
+                        $("#spinner-icon").removeClass('fa-spin');
+                        $("#barcodeImgPath").val(data.BarcodeImagePath);
+                        $("#barcodeImgMsg").hide();
+                    },
+                    error: function (xhr, status, error) {
+                        $("#spinner-icon").removeClass('fa-spin');
+                        console.error('Error generating barcode:', error);
+                        alert('Error generating barcode! Check console for details.');
+                    }
+                });
+            }
+            function generateBarcodeforUpdate() {
+                $("#updatespinner-icon").toggleClass('fa-spin');
+                $.ajax({
+                    url: '/Product/GenerateBarcode',
+                    type: 'GET',
+                    cache: false,
+                    beforeSend: function () {
+                        hideSpinner();
+                    },
+                    success: function (data) {
+                        $('#updateBarCodeNumber').val(data.BarcodeContent);
+                        $('#updatebarCodeImg').attr('src', data.BarcodeImagePath + '?random=' + Math.random());
+                        $("#updatespinner-icon").removeClass('fa-spin');
+                        $("#updatebarcodeImgPath").val(data.BarcodeImagePath);
+                        $("#updatebarcodeImgMsg").hide();
+                    },
+                    error: function (xhr, status, error) {
+                        $("#updatespinner-icon").removeClass('fa-spin');
+                        console.error('Error generating barcode:', error);
+                        alert('Error generating barcode! Check console for details.');
+                    }
+                });
+            }
+            function bindProductTable() {
+                $("#productTable").DataTable({
+                    ajax: {
+                        url: "/Product/GetProductData",
+                        dataSrc: "",
+                        beforeSend: function () {
+                            hideSpinner();
+                        }
+                    },
+                    columns: [
+                        {
+                            data: "Code",
+                            orderable: true,
+                            searchable: true,
+                        },
+                        {
+                            data: "Name",
+                            orderable: true,
+                            searchable: true
+                        },
+                        {
+                            data: "Unit",
+                            orderable: false,
+                            searchable: true
+                        },
+                        {
+                            data: "Location",
+                            orderable: false, // Not orderable
+                            searchable: true
+                        },
+                        {
+                            data: "LatestSalePrice",
+                            orderable: true,
+                            searchable: true
+                        },
+                        {
+                            data: "LastPurchasePrice",
+                            orderable: true,
+                            searchable: true
+                        },
+                        {
+                            data: "CurrentStock",
+                            orderable: true,
+                            searchable: true
+                        },
+                        {
+                            data: "Category.Name",
+                            orderable: false,
+                            searchable: true
+                        },
+                        {
+                            data: "Brand.Name",
+                            orderable: false,
+                            searchable: true
+                        },
+                        {
+                            data: "CurrentValue",
+                            orderable: true,
+                            searchable: true
+                        },
+                        {
+                            data: "AverageCost",
+                            orderable: true,
+                            searchable: true
+                        },
+                        {
+                            data: "MinimumStock",
+                            orderable: true,
+                            searchable: true
+                        },
+                        {
+                            data: "DateAdded",
+                            "render": function (data, type, row) {
+                                if (data) {
+                                    // Parse the date using Moment.js
+                                    var parsedDate = moment(parseInt(data.substr(6)));
+                                    // Format the date as "20 Mar, 2024"
+                                    return parsedDate.format("DD MMM, YYYY");
+                                } else {
+                                    return ""; // Return empty string if data is null or empty
+                                }
+                            },
+                            orderable: true,
+                            searchable: true
+                        },
+                        {
+                            data: "LastUpdated",
+                            "render": function (data, type, row) {
+                                if (data) {
+                                    // Parse the date using Moment.js
+                                    var parsedDate = moment(parseInt(data.substr(6)));
+                                    // Format the date as "20 Mar, 2024"
+                                    return parsedDate.format("DD MMM, YYYY");
+                                } else {
+                                    return ""; // Return empty string if data is null or empty
+                                }
+                            },
+                            orderable: true,
+                            searchable: true
+                        },
+                        {
+                            data: "BarCode",
+                            orderable: false,
+                            searchable: true
+                        },
+                        {
+                            data: "BarcodeImagePath",
+                            render: function (data, type, row) {
+                                return '<img src="' + data + '" alt="Barcode Image" style="width:300px;" />';
+                            }
+                        },
+
+
+                        {
+                            data: "Description",
+                            orderable: false,
+                            searchable: true
+                        },
+                        {
+                            data: "Id",
+                            render: function (data) {
+                                return "<a class='text-success me-2 btn btn-primary m-1 edit-btn' href='#' data-bs-toggle='modal' data-target='#updateProduct' data-whatever='mdo' data-id='" + data + "'><i class='fa fa-edit'></i></a>" +
+                                    "<a class='text-danger me-2 btn btn-warning' id='del' href='#' data-id='" + data + "'><i class='fa fa-trash'></i></a>";
+                            },
+                            orderable: false,
+                            searchable: false
+                        }
+                    ],
+
+                    pagingType: 'full_numbers',
+                    language: {
+                        paginate: {
+                            first: 'First',
+                            previous: '&lsaquo;',
+                            next: '&rsaquo;',
+                            last: 'Last'
+                        },
+                        searchPlaceholder: 'Min 3 Characters'
+                    },
+                    autoWidth: false, // Disable auto width calculation
+                    columnDefs: [
+                        { width: '100px', targets: '_all' } // Set a fixed width for all columns, adjust as needed
+                    ],
+                    drawCallback: function () {
+                        // Override DataTables styles with Bootstrap styles after each draw
+                        $('.dataTables_paginate .paginate_button').removeClass('paginate_button').addClass('page-item');
+                        $('.dataTables_paginate .paginate_button a').removeClass('paginate_button').addClass('page-link');
+                        $('.dataTables_paginate .paginate_button.current').removeClass('paginate_button').addClass('active');
+                        $('.dataTables_paginate .paginate_button.disabled').removeClass('paginate_button').addClass('disabled');
+                    }
+                });
+            }
+            function BindCategoryList() {
+                $("#categoryTable").DataTable({
+                    destroy: true,
+                    ajax: {
+                        url: "/Product/GetCategoryData",
+                        dataSrc: "",
+                        beforeSend: function () {
+                            hideSpinner();
+                        }
+                    },
+                    columns: [
+                        {
+                            data: "Name",
+                            orderable: true,
+                            searchable: true
+                        },
+                        {
+                            data: "Id",
+                            render: function (data, row, full) {
+                                return "<a class='text-success me-2 btn btn-primary m-1 edit-btn' id='categoryEdit' data-category-id='" + data + "' data-category-name='" + full.Name + "'><i class='fa fa-edit'></i></a>" +
+                                    "<a class='text-danger me-2 btn btn-warning' id='del' data-category-id='" + data + "'><i class='fa fa-trash'></i></a>";
+                            },
+                            orderable: false,
+                            searchable: false
+                        }
+                    ],
+                    pagingType: 'full_numbers',
+                    language: {
+                        paginate: {
+                            first: '<<',
+                            previous: '&lsaquo;',
+                            next: '&rsaquo;',
+                            last: '>>'
+                        },
+                        searchPlaceholder: 'Min 3 Characters'
+                    },
+                    autoWidth: false, // Disable auto width calculation
+                    columnDefs: [
+                        { width: '100px', targets: '_all' } // Set a fixed width for all columns, adjust as needed
+                    ],
+                    drawCallback: function () {
+                        // Override DataTables styles with Bootstrap styles after each draw
+                        $('.dataTables_paginate .paginate_button').removeClass('paginate_button').addClass('page-item');
+                        $('.dataTables_paginate .paginate_button a').removeClass('paginate_button').addClass('page-link');
+                        $('.dataTables_paginate .paginate_button.current').removeClass('paginate_button').addClass('active');
+                        $('.dataTables_paginate .paginate_button.disabled').removeClass('paginate_button').addClass('disabled');
+                    },
+                    searching: false,
+                    lengthChange: false,
+                    lengthMenu: [3],
+                });
+
+            }
+            $('#categoryTable').on('click', '#categoryEdit', function () {
+                var categoryId = $(this).data('category-id');
+                var categoryName = $(this).closest('tr').find('td:first').text(); // Assuming the category name is in the first column
+
+                $('#hiddenCategoryId').val(categoryId);
+                $('#categoryName').val(categoryName);
+            });
+            $('#categoryTable').on('click', '#del', function () {
+                var id = $(this).data('category-id');
+                bootbox.confirm({
+                    message: "Are you sure you want to delete?",
+                    buttons: {
+                        confirm: {
+                            label: 'Confirm',
+                            className: 'btn-primary'
+                        },
+                        cancel: {
+                            label: 'Cancel',
+                            className: 'btn-secondary'
+                        }
+                    },
+                    callback: function (result) {
+                        if (result) {
+                            $.ajax({
+                                url: '/Product/DeleteCategory/' + id,
+                                type: 'POST',
+                                dataType: 'json',
+                                success: function (response) {
+                                    refreshCategoryDropdown();
+                                    if (response.success) {
+                                        $(' #categoryModal #successMessage').text(response.message);
+                                        $(' #categoryModal #successAlert').fadeIn();
+                                        $(' #categoryModal #successAlert').fadeIn().delay(2000).fadeOut();
+                                        $('#categoryTable').DataTable().ajax.reload();
+                                    } else {
+                                        $('#categoryModal #errorMessage').text(response.message);
+                                        $('#categoryModal #errorAlert').fadeIn().delay(2000).fadeOut();
+                                        $('#categoryModal #successAlert').hide();
+                                    }
+                                },
+                                error: function (xhr, status, error) {
+                                    $('#errorMessage').text("An Error Occurred While Deleting Card");
+                                    $('#errorAlert').fadeIn().delay(2000).fadeOut();
+                                    $('#successAlert').hide();
+                                    setTimeout(hideAlerts, 2000);
+                                }
+                            });
+                        }
+                    }
+                });
+            });
+
+            function BindBrandList() {
+                $("#brandTable").DataTable({
+                    destroy: true,
+                    ajax: {
+                        url: "/Product/GetBrandData",
+                        dataSrc: "",
+                        beforeSend: function () {
+                            hideSpinner();
+                        }
+                    },
+                    columns: [
+                        {
+                            data: "Name",
+                            orderable: true,
+                            searchable: true
+                        },
+                        {
+                            data: "Id",
+                            render: function (data, row, full) {
+                                return "<a class='text-success me-2 btn btn-primary m-1 edit-btn' id='brandEdit' data-brand-id='" + data + "' data-brand-name='" + full.Name + "'><i class='fa fa-edit'></i></a>" +
+                                    "<a class='text-danger me-2 btn btn-warning' id='delBrand' data-brand-id='" + data + "'><i class='fa fa-trash'></i></a>";
+                            },
+                            orderable: false,
+                            searchable: false
+                        }
+                    ],
+                    pagingType: 'full_numbers',
+                    language: {
+                        paginate: {
+                            first: '<<',
+                            previous: '&lsaquo;',
+                            next: '&rsaquo;',
+                            last: '>>'
+                        },
+                        searchPlaceholder: 'Min 3 Characters'
+                    },
+                    autoWidth: false, // Disable auto width calculation
+                    columnDefs: [
+                        { width: '100px', targets: '_all' } // Set a fixed width for all columns, adjust as needed
+                    ],
+                    drawCallback: function () {
+                        // Override DataTables styles with Bootstrap styles after each draw
+                        $('.dataTables_paginate .paginate_button').removeClass('paginate_button').addClass('page-item');
+                        $('.dataTables_paginate .paginate_button a').removeClass('paginate_button').addClass('page-link');
+                        $('.dataTables_paginate .paginate_button.current').removeClass('paginate_button').addClass('active');
+                        $('.dataTables_paginate .paginate_button.disabled').removeClass('paginate_button').addClass('disabled');
+                    },
+                    searching: false,
+                    lengthChange: false,
+                    lengthMenu: [3],
+                });
+            }
+            $('#brandTable').on('click', '.edit-btn', function () {
+                var brandId = $(this).data('brand-id');
+                var brandName = $(this).closest('tr').find('td:first').text(); // Assuming the brand name is in the first column
+
+                $('#hiddenBrandId').val(brandId);
+                $('#brandName').val(brandName);
+            });
+
+            $('#brandTable').on('click', '#delBrand', function () {
+                var id = $(this).data('brand-id');
+                bootbox.confirm({
+                    message: "Are you sure you want to delete?",
+                    buttons: {
+                        confirm: {
+                            label: 'Confirm',
+                            className: 'btn-primary'
+                        },
+                        cancel: {
+                            label: 'Cancel',
+                            className: 'btn-secondary'
+                        }
+                    },
+                    callback: function (result) {
+                        if (result) {
+                            $.ajax({
+                                url: '/Product/DeleteBrand/' + id,
+                                type: 'POST',
+                                dataType: 'json',
+                                success: function (response) {
+                                    refreshBrandDropdown();
+                                    if (response.success) {
+                                        $('#brandSuccessMessage').text(response.message);
+                                        $('#brandSuccessAlert').fadeIn().delay(2000).fadeOut();
+                                        $('#brandTable').DataTable().ajax.reload();
+                                    } else {
+                                        $('#brandErrorMessage').text(response.message);
+                                        $('#brandErrorAlert').fadeIn().delay(2000).fadeOut();
+                                    }
+                                },
+                                error: function (xhr, status, error) {
+                                    $('#brandErrorMessage').text("An Error Occurred While Deleting Brand");
+                                    $('#brandErrorAlert').fadeIn().delay(2000).fadeOut();
+                                }
+                            });
+                        }
+                    }
+                });
+            });
+        });
+        function refreshCategoryDropdown() {
+            $.ajax({
+                url: '/Product/GetCategoryData',
+                type: 'GET',
+                success: function (data) {
+                    var dropdown = $('#categoryDropdown');
+                    dropdown.empty();
+                    dropdown.append('<li><a class="dropdown-item" href="javascript:void(0);" data-value="">--Select--</a></li>');
+                    $.each(data, function (index, category) {
+                        dropdown.append('<li><a class="dropdown-item" href="javascript:void(0);" data-value="' + category.Id + '">' + category.Name + '</a></li>');
+                    });
+                },
+                error: function () {
+                    alert('Error fetching categories.');
+                }
+            });
+        }
+        function refreshBrandDropdown() {
+            $.ajax({
+                url: '/Product/GetBrandData',
+                type: 'GET',
+                success: function (data) {
+                    var dropdown = $('#brandDropdown');
+                    dropdown.empty();
+                    dropdown.append('<li><a class="dropdown-item" href="javascript:void(0);" data-value="">--Select--</a></li>');
+                    $.each(data, function (index, category) {
+                        dropdown.append('<li><a class="dropdown-item" href="javascript:void(0);" data-value="' + category.Id + '">' + category.Name + '</a></li>');
+                    });
+                },
+                error: function () {
+                    alert('Error fetching categories.');
+                }
+            });
+        }
+        $('#productTable').on('click', '.edit-btn', function () {
+            var id = $(this).data('id');
+            $.ajax({
+                url: '/Product/GetProductById/' + id,
+                type: 'GET',
+                dataType: 'json',
+                success: function (product) {
+                    console.log(product);
+                    $('#updateProductId').val(product.Id);
+                    $('#updateproductCode').val(product.Code);
+                    $('#updateName').val(product.Name);
+                    $('#updateBarCodeNumber').val(product.BarCode);
+                    $('#updatecategoryId').val(product.CategoryId);
+                    $('#updatebrandId').val(product.BrandId);
+                    $('#updateUnit').val(product.Unit);
+                    $('#updateLastPurchasePrice').val(product.LastPurchasePrice);
+                    $('#updateLatestSalePrice').val(product.LatestSalePrice);
+                    $('#updateLocation').val(product.Location);
+                    $('#updateCurrentStock').val(product.CurrentStock);
+                    $('#updateCurrentValue').val(product.CurrentValue);
+                    $('#updateAverageCost').val(product.AverageCost);
+                    $('#updateMinimumStock').val(product.MinimumStock);
+                    $('#updateDescription').val(product.Description);
+                    $('#updatebarcodeImgPath').val(product.BarcodeImagePath);
+                    $('#updatebarCodeImg').attr('src', product.BarcodeImagePath);
+                    if (product.CategoryId) {
+                        $('#updatecategoryDropdown').find('a[data-value="' + product.CategoryId + '"]').addClass('active');
+                        $('#updatecategoryIdDropdown').text($('#categoryDropdown').find('a[data-value="' + product.CategoryId + '"]').text());
+                    }
+
+                    if (product.BrandId) {
+                        $('#updatebrandDropdown').find('a[data-value="' + product.BrandId + '"]').addClass('active');
+                        $('#updatebrandIdDropdown').text($('#brandDropdown').find('a[data-value="' + product.BrandId + '"]').text());
+                    }
+
+                    if (product.Unit) {
+                        $('#updateunitDropdownMenu').find('a[data-value="' + product.Unit + '"]').addClass('active');
+                        $('#updateunitDropdownButton').text($('#unitDropdownMenu').find('a[data-value="' + product.Unit + '"]').text());
+                    }
+                    // Show the modal
+                    $('#updateProduct').modal('show');
+                },
+                error: function (xhr, status, error) {
+                    // Handle error
+                    console.error(xhr.responseText);
+                }
+            });
+        });
+        $('#productTable').on('click', '#del', function () {
+            var id = $(this).data('id');
+
+            bootbox.confirm({
+                message: "Are you sure you want to delete?",
+                buttons: {
+                    confirm: {
+                        label: 'Confirm',
+                        className: 'btn-primary'
+                    },
+                    cancel: {
+                        label: 'Cancel',
+                        className: 'btn-secondary'
+                    }
+                },
+                callback: function (result) {
+                    if (result) {
+                        $.ajax({
+                            url: '/Product/Delete/' + id,
+                            type: 'POST',
+                            dataType: 'json',
+                            success: function (response) {
+                                if (response.success) {
+                                    $('#successMessage').text(response.message);
+                                    $('#successAlert').fadeIn();
+                                    $('#successAlert').fadeIn().delay(2000).fadeOut();
+                                    $('#productTable').DataTable().ajax.reload();
+                                } else {
+                                    $('#errorMessage').text(response.message);
+                                    $('#errorAlert').fadeIn().delay(2000).fadeOut();
+                                    $('#successAlert').hide();
+                                    setTimeout(hideAlerts, 2000);
+                                }
+                            },
+                            error: function (xhr, status, error) {
+                                $('#errorMessage').text("An Error Occurred While Deleting Card");
+                                $('#errorAlert').fadeIn().delay(2000).fadeOut();
+                                $('#successAlert').hide();
+                                setTimeout(hideAlerts, 2000);
+                            }
+                        });
+                    }
+                }
+            });
+        });
+
+        $('#updatecategoryDropdown').on('click', '.dropdown-item', function () {
+            $('#updatecategoryDropdown .dropdown-item').removeClass('active');
+            $(this).addClass('active');
+            var selectedText = $(this).text();
+            $('#updatecategoryIdDropdown').text(selectedText);
+            var selectedCategoryId = $(this).attr('data-value');
+            $('#updatecategoryId').val(selectedCategoryId);
+        });
+        $('#updatebrandDropdown').on('click', '.dropdown-item', function () {
+            $('#updatebrandDropdown .dropdown-item').removeClass('active');
+            $(this).addClass('active');
+            var selectedText = $(this).text();
+            $('#updatebrandIdDropdown').text(selectedText);
+            var selectedBrandId = $(this).attr('data-value');
+            $('#updatebrandId').val(selectedBrandId);
+        });
+        $('#updateunitDropdownMenu').on('click', '.dropdown-item', function () {
+            $('#updateunitDropdownMenu .dropdown-item').removeClass('active');
+            $(this).addClass('active');
+            var selectedText = $(this).text();
+            $('#updateunitDropdownButton').text(selectedText);
+            var selectedUnit = $(this).attr('data-value');
+            $('#updateUnit').val(selectedUnit);
+        });
+
+        $('#categoryDropdown').on('click', '.dropdown-item', function () {
+            $('#categoryDropdown .dropdown-item').removeClass('active');
+            $(this).addClass('active');
+            var selectedText = $(this).text();
+            $('#categoryIdDropdown').text(selectedText);
+            var selectedCategoryId = $(this).attr('data-value');
+            $('#categoryId').val(selectedCategoryId);
+        });
+        $('#brandDropdown').on('click', '.dropdown-item', function () {
+            $('#brandDropdown .dropdown-item').removeClass('active');
+            $(this).addClass('active');
+            var selectedText = $(this).text();
+            $('#brandIdDropdown').text(selectedText);
+            var selectedBrandId = $(this).attr('data-value');
+            $('#brandId').val(selectedBrandId);
+        });
+        $('#unitDropdownMenu').on('click', '.dropdown-item', function () {
+            $('#unitDropdownMenu .dropdown-item').removeClass('active');
+            $(this).addClass('active');
+            var selectedText = $(this).text();
+            $('#unitDropdownButton').text(selectedText);
+            var selectedUnit = $(this).attr('data-value');
+            $('#Unit').val(selectedUnit);
+        });
+        $('#addProduct').on('hidden.bs.modal', function () {
+            $('#addProductForm')[0].reset();
+            $('#addProductForm .text-danger').html('');
+        });
+        $('#updateProduct').on('hidden.bs.modal', function () {
+            $('#updateProductForm')[0].reset();
+            $('#updateProductForm .text-danger').html('');
+        });
+
+        function onBeginForUpdate() {
+            var categoryId = $('#updatecategoryId').val();
+            var brandId = $('#updatebrandId').val();
+            var unit = $('#updateUnit').val();
+
+            var isValid = true;
+
+            if (!categoryId) {
+                $('#updateerrorMessageforCategory').text("Category is required.");
+                isValid = false;
+            } else {
+                $('#updateerrorMessageforCategory').text(""); // Clear error message if valid
+            }
+
+            // Check if BrandId is empty
+            if (!brandId) {
+                $('#updateerrorMessageforBrand').text("Brand is required.");
+                isValid = false;
+            } else {
+                $('#updateerrorMessageforBrand').text(""); // Clear error message if valid
+            }
+
+            // Check if Unit is empty
+            if (!unit) {
+                $('#updateerrorMessageforUnit').text("Unit is required.");
+                isValid = false;
+            } else {
+                $('#updateerrorMessageforUnit').text(""); // Clear error message if valid
+            }
+
+            return isValid; // Return false to prevent form submission if any field is empty
+        }
+        function onBeginforAdd() {
+            var categoryId = $('#categoryId').val();
+            var brandId = $('#brandId').val();
+            var unit = $('#Unit').val();
+
+            var isValid = true;
+
+            // Check if CategoryId is empty
+            if (!categoryId) {
+                $('#errorMessageforCategory').text("Category is required.");
+                isValid = false;
+            } else {
+                $('#errorMessageforCategory').text(""); // Clear error message if valid
+            }
+
+            // Check if BrandId is empty
+            if (!brandId) {
+                $('#errorMessageforBrand').text("Brand is required.");
+                isValid = false;
+            } else {
+                $('#errorMessageforBrand').text(""); // Clear error message if valid
+            }
+
+            // Check if Unit is empty
+            if (!unit) {
+                $('#errorMessageforUnit').text("Unit is required.");
+                isValid = false;
+            } else {
+                $('#errorMessageforUnit').text(""); // Clear error message if valid
+            }
+
+            return isValid; // Return false to prevent form submission if any field is empty
+        }
+
+        function handleSuccessforUpdate(response) {
+            $('#updateProductForm')[0].reset();
+            $('#productTable').DataTable().ajax.reload();
+            $('html, body').animate({
+                scrollTop: 0
+            }, 500);
+            if (response.success) {
+                $('#successMessage').text(response.message);
+                $('#successAlert').show();
+                $('#successAlert').fadeIn().delay(2000).fadeOut();
+
+                $("#updateProduct").modal('hide');
+            } else {
+                $('#errorMessage').text(response.error);
+                $('#errorAlert').show();
+                $('#errorAlert').fadeIn().delay(2000).fadeOut();
+            }
+        }
+
+        function handleFailureforUpdate() {
+            $('html, body').animate({
+                scrollTop: 0
+            }, 500);
+            $('#errorMessage').text('Error occurred while updating product details.');
+            $('#errorAlert').show();
+            $('#errorAlert').fadeIn().delay(2000).fadeOut();
+        }
+        function handleSuccessforAdd(response) {
+            $('html, body').animate({
+                scrollTop: 0
+            }, 500);
+            $("#addProduct").modal('hide');
+            $('#productTable').DataTable().ajax.reload();
+            if (response.success) {
+                $('#addProductForm')[0].reset();
+                $('#successMessage').text(response.message);
+                $('#successAlert').show();
+                $('#successAlert').fadeIn().delay(2000).fadeOut();
+            } else {
+                $('#errorMessage').text(response.error);
+                $('#errorAlert').show();
+                $('#errorAlert').fadeIn().delay(2000).fadeOut();
+            }
+        }
+
+        function handleFailureforAdd(xhr, status, error) {
+            $('html, body').animate({
+                scrollTop: 0
+            }, 500);
+            $('#errorMessage').text('Error occurred while updating product details.');
+            $('#errorAlert').show();
+            $('#errorAlert').fadeIn().delay(2000).fadeOut();
+        }
+
+        function handleSuccessforCategory(response) {
+            $("#hiddenCategoryId").val('');
+            $('.form-container').find('form')[0].reset();
+            refreshCategoryDropdown();
+            $('#categoryTable').DataTable().ajax.reload();
+            // Hide any existing alerts within #categoryModal
+            $("#categoryModal #successAlert, #categoryModal #errorAlert").hide();
+
+            // Set the success message and show the success alert within #categoryModal
+            $("#categoryModal #successMessage").text(response.message);
+            $("#categoryModal #successAlert").fadeIn();
+
+            // Hide the success alert after 2 seconds
+            setTimeout(function () {
+                $("#categoryModal #successAlert").fadeOut();
+            }, 2000);
+        }
+
+        function handleFailureforCategory(xhr, status, error) {
+            // Hide any existing alerts within #categoryModal
+            $("#categoryModal #successAlert, #categoryModal #errorAlert").hide();
+
+            // Set the error message and show the error alert within #categoryModal
+            $("#categoryModal #errorMessage").text("An error occurred: " + error);
+            $("#categoryModal #errorAlert").fadeIn();
+
+            // Hide the error alert after 2 seconds
+            setTimeout(function () {
+                $("#categoryModal #errorAlert").fadeOut();
+            }, 2000);
+        }
+        function handleSuccessforBrand(response) {
+            $('#brandName').val('');
+            $('#hiddenBrandId').val('');
+            refreshBrandDropdown();
+            $('#brandTable').DataTable().ajax.reload();
+
+            $("#brandModal #SuccessMessage").text(response.message);
+            $("#brandModal #SuccessAlert").fadeIn();
+
+            // Hide the success alert after 2 seconds
+            setTimeout(function () {
+                $("#brandModal #SuccessAlert").fadeOut();
+            }, 2000);
+        }
+
+        function handleFailureforBrand(xhr, status, error) {
+           
+            $("#brandModal #SuccessAlert, #brandModal #ErrorAlert").hide();
+
+            // Set the error message and show the error alert within #categoryModal
+            $("#brandModal #ErrorMessage").text("An error occurred: " + error);
+            $("#brandModal #ErrorAlert").fadeIn();
+
+            // Hide the error alert after 2 seconds
+            setTimeout(function () {
+                $("#brandModal #ErrorAlert").fadeOut();
+            }, 2000);
+        }
+
+    </script>
+}

@@ -17,6 +17,7 @@
     <link href="~/dist-assets/css/plugins/sweetalert2.min.css" rel="stylesheet" />
     <link href="~/dist-assets/css/themes/lite-purple.min.css" rel="stylesheet" />
     <link href="~/dist-assets/css/plugins/perfect-scrollbar.min.css" rel="stylesheet" />
+    <link href="~/lib/select2/css/select2.min.css" rel="stylesheet" />
 
     <style>
         .childNav {
@@ -98,17 +99,34 @@
 
         </div>
         @*@if (User.Identity.IsAuthenticated)
-        {*@
-            <div class="side-content-wrap">
-                <div class="sidebar-left open rtl-ps-none"
-                     data-perfect-scrollbar=""
-                     data-suppress-scroll-x="true">
-                    <ul class="navigation-left">
-                        <!-- Yahan Admin ke buttons honge -->
-                        <li class="nav-item no-open" data-item="">
-                            <a class="nav-item-hold" href="/Inventory/Index">
-                                <i class="fa fa-inventory fa-lg"></i><span class="nav-text">Inventory</span>
+            {*@
+        <div class="side-content-wrap">
+            <div class="sidebar-left open rtl-ps-none"
+                 data-perfect-scrollbar=""
+                 data-suppress-scroll-x="true">
+                <ul class="navigation-left">
+                    <!-- Yahan Admin ke buttons honge -->
+                    <li class="nav-item no-open" data-item="">
+                        <a class="nav-item-hold" href="/Inventory/Index">
+                            <i class="fa fa-inventory fa-lg"></i><span class="nav-text">Inventory</span>
+                        </a>
+                    </li>
+                    <li class="nav-item" data-item="manage">
+                        <a class="nav-item-hold" href="#">
+                            <i class="fa fa-sliders-h fa-lg"></i><span class="nav-text">Manage</span>
+                        </a>
+                        <div class="triangle"></div>
+                    </li>
+                    <li class="nav-item no-open" data-item="">
+                        <a class="nav-item-hold" href="/Sales/Index">
+                            <i class="fas fa-dollar-sign fa-lg"></i><span class="nav-text">Sales</span>
+                        </a>
+                    </li>
+                    @*<li class="nav-item" data-item="attendance">
+                            <a class="nav-item-hold" href="#">
+                                <i class="fa fa-clock fa-lg"></i><span class="nav-text">Attendance</span>
                             </a>
+                            <div class="triangle"></div>
                         </li>
                         <li class="nav-item" data-item="manage">
                             <a class="nav-item-hold" href="#">
@@ -116,104 +134,92 @@
                             </a>
                             <div class="triangle"></div>
                         </li>
-                        @*<li class="nav-item" data-item="attendance">
-            <a class="nav-item-hold" href="#">
-                <i class="fa fa-clock fa-lg"></i><span class="nav-text">Attendance</span>
-            </a>
-            <div class="triangle"></div>
-        </li>
-        <li class="nav-item" data-item="manage">
-            <a class="nav-item-hold" href="#">
-                <i class="fa fa-sliders-h fa-lg"></i><span class="nav-text">Manage</span>
-            </a>
-            <div class="triangle"></div>
-        </li>
-        <li class="nav-item no-open" data-item="">
-            <a class="nav-item-hold" href="/Payroll/Index">
-                <i class="fas fa-money-check fa-lg"></i><span class="nav-text">Payroll</span>
-            </a>
-        </li>
-        <li class="nav-item no-open" data-item="">
-            <a class="nav-item-hold" href="/Leave/Inbox">
-                <i class="fa fa-bed-alt fa-lg"></i><span class="nav-text">Leave Requests</span>
-                <span class="badge badge-square badge-square-opacity-primary m-1" id="leaveRequestsBadge"></span>
-            </a>
-        </li>
-        <li class="nav-item no-open" data-item="">
-            <a class="nav-item-hold" href="/Emails/Index">
-                <i class="fas fa-mailbox fa-lg"></i><span class="nav-text">Compose Email</span>
-            </a>
-        </li>
-        <li class="nav-item no-open" data-item="">
-            <a class="nav-item-hold" href="/Shift/AssignShift">
-                <i class="fas fa-exchange-alt fa-lg"></i><span class="nav-text">Assign Shift</span>
-            </a>
-        </li>
-        <li class="nav-item no-open" data-item="">
-            <a class="nav-item-hold" href="/Reporting/Index">
-                <i class="fas fa-check-circle fa-lg"></i><span class="nav-text">Reporting</span>
-            </a>
-        </li>
-        <li class="nav-item no-open" data-item="">
-            <form id="logoutFormTwo" action="/Account/LogOff" method="post">
-                @Html.AntiForgeryToken()
-                <a class="nav-item-hold" href="javascript:void(0)" onclick="document.getElementById('logoutFormTwo').submit()">
-                    <i class="fas fa-sign-out-alt fa-lg"></i><span class="nav-text">LogOut</span>
-                </a>
-            </form>
-        </li>*@
+                        <li class="nav-item no-open" data-item="">
+                            <a class="nav-item-hold" href="/Payroll/Index">
+                                <i class="fas fa-money-check fa-lg"></i><span class="nav-text">Payroll</span>
+                            </a>
+                        </li>
+                        <li class="nav-item no-open" data-item="">
+                            <a class="nav-item-hold" href="/Leave/Inbox">
+                                <i class="fa fa-bed-alt fa-lg"></i><span class="nav-text">Leave Requests</span>
+                                <span class="badge badge-square badge-square-opacity-primary m-1" id="leaveRequestsBadge"></span>
+                            </a>
+                        </li>
+                        <li class="nav-item no-open" data-item="">
+                            <a class="nav-item-hold" href="/Emails/Index">
+                                <i class="fas fa-mailbox fa-lg"></i><span class="nav-text">Compose Email</span>
+                            </a>
+                        </li>
+                        <li class="nav-item no-open" data-item="">
+                            <a class="nav-item-hold" href="/Shift/AssignShift">
+                                <i class="fas fa-exchange-alt fa-lg"></i><span class="nav-text">Assign Shift</span>
+                            </a>
+                        </li>
+                        <li class="nav-item no-open" data-item="">
+                            <a class="nav-item-hold" href="/Reporting/Index">
+                                <i class="fas fa-check-circle fa-lg"></i><span class="nav-text">Reporting</span>
+                            </a>
+                        </li>
+                        <li class="nav-item no-open" data-item="">
+                            <form id="logoutFormTwo" action="/Account/LogOff" method="post">
+                                @Html.AntiForgeryToken()
+                                <a class="nav-item-hold" href="javascript:void(0)" onclick="document.getElementById('logoutFormTwo').submit()">
+                                    <i class="fas fa-sign-out-alt fa-lg"></i><span class="nav-text">LogOut</span>
+                                </a>
+                            </form>
+                        </li>*@
 
-                    </ul>
-                    
-                </div>
-                <div class="sidebar-left-secondary rtl-ps-none" data-perfect-scrollbar="" data-suppress-scroll-x="true">
-                   
-                        <ul class="childNav" data-parent="manage">
-                            <li class="nav-item">
-                                <a href="/Product/Index">
-                                    <i class="fa fa-tshirt"></i><span class="item-name" style="margin-left:15px;font-size:15px;">Products</span>
-                                </a>
-                            </li>
-                            @*<li class="nav-item">
-                                <a href="/Employee/Index">
-                                    <i class="fa fa-user"></i><span class="item-name" style="margin-left:15px;font-size:15px;">Employee</span>
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="/Shift/Index">
-                                    <i class="fa fa-shipping-fast"></i><span class="item-name" style="margin-left:15px;font-size:15px;">Shift</span>
-                                </a>
-                            </li>*@
+                </ul>
 
-                            @*<li class="nav-item dropdown-sidemenu">
-                                <a>
-                                    <i class="fa fa-calendar"></i><span class="item-name" style="margin-left:15px;font-size:15px;">Meeting</span><i class="dd-arrow fa fa-chevron-down"></i>
-                                </a>
-                                <ul class="submenu">
-                                    <li><a href="/Meeting/Index">New Meeting</a></li>
-                                    <li><a href="/Meeting/MeetingList">Meeting List</a></li>
-                                </ul>
-                            </li>*@
-                            @*<li class="nav-item">
-                                <a href="/Labour/Index">
-                                    <i class="fas fa-user-hard-hat"></i><span class="item-name" style="margin-left:15px;font-size:15px;">Labour</span>
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="/Card/Index">
-                                    <i class="fa-solid fa-credit-card"></i><span class="item-name" style="margin-left:15px;font-size:15px;">Card</span>
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="/Leave/Index">
-                                    <i class="fas fa-house-person-leave"></i><span class="item-name" style="margin-left:15px;font-size:15px;">Leave</span>
-                                </a>
-                            </li>*@
-                        </ul>
-                    
-                </div>
-                <div class="sidebar-overlay"></div>
             </div>
+            <div class="sidebar-left-secondary rtl-ps-none" data-perfect-scrollbar="" data-suppress-scroll-x="true">
+
+                <ul class="childNav" data-parent="manage">
+                    <li class="nav-item">
+                        <a href="/Product/Index">
+                            <i class="fa fa-tshirt"></i><span class="item-name" style="margin-left:15px;font-size:15px;">Products</span>
+                        </a>
+                    </li>
+                    @*<li class="nav-item">
+                            <a href="/Employee/Index">
+                                <i class="fa fa-user"></i><span class="item-name" style="margin-left:15px;font-size:15px;">Employee</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="/Shift/Index">
+                                <i class="fa fa-shipping-fast"></i><span class="item-name" style="margin-left:15px;font-size:15px;">Shift</span>
+                            </a>
+                        </li>*@
+
+                    @*<li class="nav-item dropdown-sidemenu">
+                            <a>
+                                <i class="fa fa-calendar"></i><span class="item-name" style="margin-left:15px;font-size:15px;">Meeting</span><i class="dd-arrow fa fa-chevron-down"></i>
+                            </a>
+                            <ul class="submenu">
+                                <li><a href="/Meeting/Index">New Meeting</a></li>
+                                <li><a href="/Meeting/MeetingList">Meeting List</a></li>
+                            </ul>
+                        </li>*@
+                    @*<li class="nav-item">
+                            <a href="/Labour/Index">
+                                <i class="fas fa-user-hard-hat"></i><span class="item-name" style="margin-left:15px;font-size:15px;">Labour</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="/Card/Index">
+                                <i class="fa-solid fa-credit-card"></i><span class="item-name" style="margin-left:15px;font-size:15px;">Card</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="/Leave/Index">
+                                <i class="fas fa-house-person-leave"></i><span class="item-name" style="margin-left:15px;font-size:15px;">Leave</span>
+                            </a>
+                        </li>*@
+                </ul>
+
+            </div>
+            <div class="sidebar-overlay"></div>
+        </div>
         @*}*@
         <!-- =============== Left side End ================-->
         <div class="main-content-wrap sidenav-open d-flex flex-column">
@@ -227,15 +233,15 @@
             <div class="app-footer text-light">
                 <div class="container">
                     @*<div class="row">
-                        <div class="col-md-12">
-                            <h5>About Azraq Suiting</h5>
-                            <p class="text-muted">
-                                We are committed to providing efficient transport solutions
-                                with a focus on reliability and customer satisfaction.
-                                Everyday is a new day for us and we work really hard to satisfy our customer. Cactus General Transport is leading the way when it comes to providing quality heavy equipment rental.
-                            </p>
-                        </div>
-                    </div>*@
+                            <div class="col-md-12">
+                                <h5>About Azraq Suiting</h5>
+                                <p class="text-muted">
+                                    We are committed to providing efficient transport solutions
+                                    with a focus on reliability and customer satisfaction.
+                                    Everyday is a new day for us and we work really hard to satisfy our customer. Cactus General Transport is leading the way when it comes to providing quality heavy equipment rental.
+                                </p>
+                            </div>
+                        </div>*@
 
                     <div class="row mt-4">
                         <div class="col-md-12 text-center">
@@ -277,6 +283,7 @@
     <script src="~/Scripts/jquery.validate.min.js"></script>
     <script src="~/Scripts/moment.js"></script>
     <script src="~/Scripts/custom-sidebar.large.script.js"></script>
+    <script src="~/lib/select2/js/select2.min.js"></script>
     <script src="~/Scripts/custom-sidebar.js"></script>
     @*<script src="~/Scripts/inputmask/jquery.inputmask.min.js"></script>*@
     @Scripts.Render("~/bundles/jqueryval")

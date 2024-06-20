@@ -1,0 +1,744 @@
+﻿@{
+    ViewBag.Title = "Index";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<style>
+    #invoice-table th,
+    #invoice-table td {
+        text-align: center;
+        vertical-align: middle;
+    }
+</style>
+<div class="main-content">
+    <div class="row">
+        <div class="col-md-12">
+            <ul class="nav nav-tabs justify-content-end mb-4" id="myTab" role="tablist">
+                <li class="nav-item">
+                    <a class="nav-link active" id="invoice-tab" data-bs-toggle="tab" href="#invoice" role="tab" aria-controls="invoice" aria-selected="true">Invoice</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" id="edit-tab" data-bs-toggle="tab" href="#edit" role="tab" aria-controls="edit" aria-selected="false">Edit</a>
+                </li>
+            </ul>
+            <div class="card">
+                <div class="tab-content" id="myTabContent">
+                    <div class="tab-pane fade show active" id="invoice" role="tabpanel" aria-labelledby="invoice-tab">
+                        <div class="d-sm-flex mb-5" data-view="print">
+                            <span class="m-auto"></span>
+                            <button class="btn btn-primary mb-sm-0 mb-3 print-invoice">Print Invoice</button>
+                        </div>
+                        <div id="print-area">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h4 class="fw-bold">Order Info</h4>
+                                    <p id="orderNumber"></p>
+                                </div>
+                                <div class="col-md-6 text-sm-end">
+                                    @*<p><strong>Order status: </strong>Delivered</p>*@
+                                    <p><strong>Order date:<br/> <span id="orderDate"></span> </strong></p>
+                                </div>
+                            </div>
+                            <div class="mt-3 mb-4 border-top"></div>
+                            <div class="row mb-5">
+                                <div class="col-md-6 mb-3 mb-sm-0">
+                                    @*<h5 class="fw-bold">Bill From</h5>
+                                    <p>New Age Inc.</p>
+                                    <span style="white-space: pre-line">rodriguez.trent@senger.com 61 Johnson St. Shirley, NY 11967. +202-555-0170</span>*@
+                                </div>
+                                <div class="col-md-6 text-sm-end">
+                                    <h5 class="fw-bold">Bill To</h5>
+                                    <p id="customerName"></p>
+                                    <span style="white-space: pre-line" id="phoneNumber"></span>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-12 table-responsive">
+                                    <table class="table table-hover mb-4" id="invoiceSummaryTable">
+                                        <thead class="bg-gray-300">
+                                            <tr>
+                                                <th scope="col" style="width:5%">#</th>
+                                                <th scope="col">Item Name</th>
+                                                <th scope="col">Unit Price</th>
+                                                <th scope="col">Quantity</th>
+                                                <th scope="col">Discount</th>
+                                                <th scope="col">Cost</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div class="col-md-12 mt-3">
+                                    <div class="invoice-summary">
+                                        <p>Sub total: <span id="subTotalInvoiceSummary"></span></p>
+                                        <p>Discount: <span id="discountInvoiceSummary"></span></p>
+                                        <h5 class="fw-bold">Grand Total: <span id="grandTotalInvoiceSummary"></span></h5>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- ==== / Print Area =====-->
+                    </div>
+                    <div class="tab-pane fade" id="edit" role="tabpanel" aria-labelledby="edit-tab">
+                        <div class="alert alert-dismissible fade show alert-card alert-success" role="alert" id="successAlert" style="display:none">
+                            <strong class="text-capitalize">Success!</strong> <span id="successMessage"></span>
+                            <button class="btn btn-close" type="button" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                        <div class="alert alert-dismissible fade show alert-card alert-danger" role="alert" id="errorAlert" style="display:none">
+                            <strong class="text-capitalize">Error!</strong> <span id="errorMessage"></span>
+                            <button class="btn btn-close" type="button" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                        <!-- ==== Edit Area =====-->
+                        <div class="d-flex mb-5">
+                            <span class="m-auto"></span>
+                            <button type="button" class="btn btn-primary" id="submit-button">Save</button>
+                        </div>
+                        <form>
+                            <div class="row justify-content-between">
+                                <div class="col-md-6">
+                                    <h4 class="fw-bold">Order Info</h4>
+                                    <div class="col-sm-4 form-group mb-3 ps-0">
+                                        <label for="orderNo">Order Number</label>
+                                        <input class="form-control" id="orderNo" type="text" placeholder="Enter order number" value="@ViewBag.OrderNumber" disabled />
+                                    </div>
+                                </div>
+                                <div class="col-md-3 text-end">
+                                    @*<label class="d-block text-12 text-muted">Order Status</label>*@
+                                    <div class="pe-0 mb-4">
+                                        @*<label class="radio radio-reverse radio-danger">
+                                            <input type="radio" name="orderStatus" value="Pending" /><span>Pending</span><span class="checkmark"></span>
+                                        </label>
+                                        <label class="radio radio-reverse radio-warning">
+                                            <input type="radio" name="orderStatus" value="Processing" /><span>Processing</span><span class="checkmark"></span>
+                                        </label>
+                                        <label class="radio radio-reverse radio-success">
+                                            <input type="radio" name="orderStatus" value="Delivered" /><span>Delivered</span><span class="checkmark"></span>
+                                        </label>*@
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="order-datepicker">Order Date</label>
+                                        <input class="form-control text-end" id="order-datepicker" type="date" name="dp" />
+                                        <span class="text-danger dateError" style="display: none;"></span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mt-3 mb-4 border-top"></div>
+                            <div class="row mb-5">
+                                <div class="col-md-8">
+
+                                </div>
+                                <div class="col-md-4 text-end">
+                                    <h5 class="fw-bold">Bill To</h5>
+                                    <div class="col-md-10 offset-md-2 form-group mb-3 pe-0">
+                                        <select class="form-control customerDropdown" style="width: 100%;">
+                                            <option value="">Select Customer</option>
+                                        </select>
+                                        <span class="text-danger customer-error" style="display: none;"></span>
+                                    </div>
+                                    <div class="col-md-10 offset-md-2 form-group mb-3 pe-0">
+                                        <input class="form-control text-end phoneNumber" type="text" placeholder="Phone Number" disabled />
+                                        <span class="text-danger phone-error" style="display: none;"></span>
+                                    </div>
+                                </div>
+
+                            </div>
+                            <div class="row">
+                                <div class="col-md-12 table-responsive">
+                                    <button type="button" class="btn btn-primary float-end mb-2" id="add-row">Add Item</button>
+                                    <table class="table table-bordered mb-3" id="invoice-table">
+                                        <thead class="bg-gray-300">
+                                            <tr>
+                                                <th scope="col">#</th>
+                                                <th scope="col" style="width: 20%;">Product</th>
+                                                <th scope="col" style="width: 18%;">Unit Price</th>
+                                                <th scope="col" style="width: 27%;">Quantity</th>
+                                                <th scope="col" style="width: 27%;">Discount</th>
+                                                <th scope="col" style="width: 20%;">Total</th>
+                                                <th scope="col"></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <th scope="row">1</th>
+                                                <td>
+                                                    <select class="form-control product-select" style="width: 100%;">
+                                                        <option value="">Select a product</option>
+                                                        <!-- Options will be populated from the product table -->
+                                                    </select>
+                                                </td>
+                                                <td class="unit-price"></td>
+                                                <td>
+                                                    <input class="form-control quantity" type="number" placeholder="Quantity" disabled />
+                                                    <span class="text-danger quantity-error" style="display: none;"></span>
+                                                </td>
+                                                <td><input class="form-control discount" type="number" placeholder="Discount" disabled /></td>
+                                                <td class="total">0</td>
+                                                <td><button type="button" class="btn btn-outline-secondary delete-row">Delete</button></td>
+                                            </tr>
+                                            <tr>
+                                                <th scope="row">2</th>
+                                                <td>
+                                                    <select class="form-control product-select" style="width: 100%;">
+                                                        <option value="">Select a product</option>
+                                                        <!-- Options will be populated from the product table -->
+                                                    </select>
+                                                </td>
+                                                <td class="unit-price"></td>
+                                                <td>
+                                                    <input class="form-control quantity" type="number" placeholder="Quantity" disabled />
+                                                    <span class="text-danger quantity-error" style="display: none;"></span>
+                                                </td>
+                                                <td><input class="form-control discount" type="number" placeholder="Discount" disabled /></td>
+                                                <td class="total">0</td>
+                                                <td><button type="button" class="btn btn-outline-secondary delete-row">Delete</button></td>
+                                            </tr>
+                                            <tr>
+                                                <th scope="row">3</th>
+                                                <td>
+                                                    <select class="form-control product-select" style="width: 100%;">
+                                                        <option value="">Select a product</option>
+                                                        <!-- Options will be populated from the product table -->
+                                                    </select>
+                                                </td>
+                                                <td class="unit-price"></td>
+                                                <td>
+                                                    <input class="form-control quantity" type="number" placeholder="Quantity" disabled />
+                                                    <span class="text-danger quantity-error" style="display: none;"></span>
+                                                </td>
+                                                <td><input class="form-control discount" type="number" placeholder="Discount" disabled /></td>
+                                                <td class="total">0</td>
+                                                <td><button type="button" class="btn btn-outline-secondary delete-row">Delete</button></td>
+                                            </tr>
+                                            <tr>
+                                                <th scope="row">4</th>
+                                                <td>
+                                                    <select class="form-control product-select" style="width: 100%;">
+                                                        <option value="">Select a product</option>
+                                                        <!-- Options will be populated from the product table -->
+                                                    </select>
+                                                </td>
+                                                <td class="unit-price"></td>
+                                                <td>
+                                                    <input class="form-control quantity" type="number" placeholder="Quantity" disabled />
+                                                    <span class="text-danger quantity-error" style="display: none;"></span>
+                                                </td>
+                                                <td><input class="form-control discount" type="number" placeholder="Discount" disabled /></td>
+                                                <td class="total">0</td>
+                                                <td><button type="button" class="btn btn-outline-secondary delete-row">Delete</button></td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+
+                                </div>
+                                <div class="col-md-12">
+                                    <div class="invoice-summary invoice-summary-input float-end">
+                                        <p>Sub total: <span id="subTotal">0.00</span></p>
+                                        <h5 class="fw-bold d-flex align-items-center">
+                                            Discount: <span><input class="form-control" id="discountInvoice" type="number" min="0" /></span>
+                                        </h5>
+                                        <h5 class="fw-bold d-flex align-items-center">
+                                            Grand Total: <span id="grandTotal">0.00</span>
+                                        </h5>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                        <!-- ==== / Edit Area =====-->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- end of main-content -->
+</div>
+@section scripts
+{
+    <script>
+      
+        $(document).ready(function () {
+            updateInvoiceTotals();
+          
+            
+
+            function calculateTotal(row) {
+                var unitPrice = parseFloat(row.find('.unit-price-input').val()) || parseFloat(row.find('.unit-price').text()) || 0;
+                var quantity = parseFloat(row.find('.quantity').val()) || 0;
+                var discount = parseFloat(row.find('.discount').val()) || 0;
+
+                var total = (unitPrice * quantity) - discount;
+                row.find('.total').text(total.toFixed(2));
+                updateInvoiceTotals();
+            }
+            $('#discountInvoice').on('input', function () {
+                updateInvoiceTotals();
+            });
+            function updateInvoiceTotals() {
+                var subTotal = 0;
+
+                $('#invoice-table tbody tr').each(function () {
+                    var rowTotal = parseFloat($(this).find('.total').text()) || 0;
+                    subTotal += rowTotal;
+                });
+
+                var discount = parseFloat($('#discountInvoice').val()) || 0;
+                var grandTotal = subTotal - discount;
+
+                $('#subTotal').text(subTotal.toFixed(2));
+                $('#grandTotal').text(grandTotal.toFixed(2));
+            }
+            $('#invoice-table').on('input', '.unit-price-input, .quantity, .discount', function () {
+                var row = $(this).closest('tr');
+                calculateTotal(row);
+            });
+
+
+            $('.product-select').select2({
+                placeholder: "Select or type a product",
+                allowClear: true,
+                tags: true,
+                createTag: function (params) {
+                    var term = $.trim(params.term);
+                    if (term === '') {
+                        return null;
+                    }
+                    return {
+                        id: term,
+                        text: term,
+                        isNew: true
+                    };
+                },
+                ajax: {
+                    url: '/Product/GetProductDataForDropdown/',
+                    dataType: 'json',
+                    delay: 250,
+                    data: function (params) {
+                        return {
+                            q: params.term // search term
+                        };
+                    },
+                    processResults: function (data) {
+                        return {
+                            results: data.results.map(function (product) {
+                                return {
+                                    id: product.id,
+                                    text: product.text,
+                                    price: product.price
+                                };
+                            })
+                        };
+                    },
+                    cache: true
+                }
+            });
+
+            // Handle product selection event to set unit price and enable inputs
+            $('body').on('select2:select', '.product-select', function (e) {
+                var selectedProduct = e.params.data;
+                var row = $(this).closest('tr');
+
+                row.find('.quantity, .discount').prop('disabled', false);
+
+                if (selectedProduct.isNew) {
+                    // Prompt user to enter price for custom item
+                    row.find('.unit-price').html('<input type="number" class="form-control unit-price-input" placeholder="Unit Price" min="0"><span class="unit-price-error text-danger" style="display: none;"></span>');
+
+
+                    row.find('.unit-price-input').focus();
+                } else {
+                    row.find('.unit-price').html(selectedProduct.price);
+                }
+
+                // Calculate total
+                calculateTotal(row);
+            });
+
+            // Handle quantity, discount and unit price input changes to recalculate total
+            $('body').on('input', '.quantity, .discount, .unit-price-input', function () {
+                var row = $(this).closest('tr');
+                calculateTotal(row);
+            });
+
+            function addRow() {
+                var rowCount = $('#invoice-table tbody tr').length + 1;
+                var newRow = `<tr>
+            <th scope="row">${rowCount}</th>
+            <td>
+                <select class="form-control product-select" style="width: 100%;">
+                    <option value="">Select a product</option>
+                    <!-- Options will be populated from the product table -->
+                </select>
+            </td>
+            <td class="unit-price"></td>
+            <td>
+                       <input class="form-control quantity" type="number" placeholder="Quantity" disabled />
+                       <span class="text-danger quantity-error" style="display: none;"></span>
+                   </td>
+            <td><input class="form-control discount" type="number" placeholder="Discount" disabled /></td>
+            <td class="total">0</td>
+            <td class="align-items-end"><button type="button" class="btn btn-outline-secondary delete-row">Delete</button></td>
+        </tr>`;
+                $('#invoice-table tbody').append(newRow);
+                $('.product-select').select2({
+                    placeholder: "Select or type a product",
+                    allowClear: true,
+                    tags: true,
+                    createTag: function (params) {
+                        var term = $.trim(params.term);
+                        if (term === '') {
+                            return null;
+                        }
+                        return {
+                            id: term,
+                            text: term,
+                            isNew: true
+                        };
+                    },
+                    ajax: {
+                        url: '/Product/GetProductDataForDropdown/',
+                        dataType: 'json',
+                        delay: 250,
+                        data: function (params) {
+                            return {
+                                q: params.term // search term
+                            };
+                        },
+                        processResults: function (data) {
+                            return {
+                                results: data.results.map(function (product) {
+                                    return {
+                                        id: product.id,
+                                        text: product.text,
+                                        price: product.price
+                                    };
+                                })
+                            };
+                        },
+                        cache: true
+                    }
+                });
+            }
+
+            $(document).on('click', '.delete-row', function () {
+                $(this).closest('tr').remove();
+                $('#invoice-table tbody tr').each(function (index) {
+                    $(this).find('th').text(index + 1);
+                });
+                updateInvoiceTotals();
+            });
+
+            $('#add-row').click(function () {
+                addRow();
+            });
+            $('#submit-button').click(function () {
+                // Reset previous error messages
+                $('.quantity-error').hide().text('');
+                $('.unit-price-error').hide().text('');
+                $('.dateError').hide().text('');
+                $('.customer-error').hide().text('');
+                $('.phone-error').hide().text('');
+                $('#errorAlert').hide();
+                $('#successAlert').hide();
+
+                var invoiceData = [];
+
+                // Flag to track if there are any validation errors
+                var hasErrors = false;
+
+                $('#invoice-table tbody tr').each(function () {
+                    
+                    var productSelect = $(this).find('.product-select');
+                    var productId = productSelect.val();
+                    var productText = productSelect.find('option:selected').text();
+                    var isNewProduct = productSelect.find('option:selected').data('isNew');
+                    var quantity = parseFloat($(this).find('.quantity').val()) || 0;
+                    var discount = parseFloat($(this).find('.discount').val()) || 0;
+                    var unitPrice = parseFloat($(this).find('.unit-price-input').val()) || parseFloat($(this).find('.unit-price').text()) || 0;
+
+                    // Validate only if product is selected or isNewProduct flag is true
+                    if ((productId || isNewProduct) && quantity > 0 && unitPrice > 0) {
+                        var productData = {
+                            productId: isNewProduct ? null : productId,
+                            productName: isNewProduct ? productText : null,
+                            quantity: quantity,
+                            discount: discount,
+                            unitPrice: unitPrice
+                        };
+
+                        invoiceData.push(productData);
+                    } else if (productId || isNewProduct) {
+                        // Product is selected but quantity or unit price is invalid
+                        if (quantity <= 0) {
+                            $(this).find('.quantity-error').text('Quantity must be greater than zero.').show();
+                        }
+                        if (unitPrice <= 0) {
+                            $(this).find('.unit-price-error').text('Unit Price must be greater than zero.').show();
+                        }
+                        hasErrors = true; // Set error flag to true
+                    }
+                });
+                var saleDate = $("#order-datepicker").val();
+                if (!saleDate) {
+                    // If saleDate is null, show an error message
+                    $('.dateError').text('Sale date is required.').show();
+                    hasErrors = true;
+                }
+
+                var customerSelect = $('.customerDropdown');
+                var customerId = customerSelect.val();
+                var customerText = customerSelect.find('option:selected').text();
+                var isNewCustomer = customerSelect.find('option:selected').data('isNew');
+                var customerPhone = $('.phoneNumber').val();
+
+                if (!customerId && !isNewCustomer) {
+                    // If no customer is selected or added
+                    $('.customer-error').text('Customer is required.').show();
+                    hasErrors = true;
+                }
+
+                if (!customerPhone) {
+                    // If a new customer is added but phone number is missing
+                    $('.phone-error').text('Phone number is required for new customers.').show();
+                    hasErrors = true;
+                }
+
+                if (hasErrors) {
+                    // If there are validation errors, abort submission
+                    $('#edit #errorMessage').text('Please correct the errors in the highlighted fields.');
+                    $('#edit #errorAlert').show();
+                    $('html, body').animate({ scrollTop: 0 }, 'fast'); // Scroll to top
+                    return;
+                }
+
+                if (invoiceData.length === 0 || invoiceData === null) {
+                    // If no valid rows are present, or invoiceData is null, show an error message
+                    $('#edit #errorMessage').text('No valid data to submit. Please add product details.');
+                    $('#edit #errorAlert').show();
+                    $('html, body').animate({ scrollTop: 0 }, 'fast'); // Scroll to top
+                    return;
+                }
+                var orderNum=$("#orderNo").val();
+                var discount = $("#discountInvoice").val();
+                if (discount === null || discount === "") {
+                    discount = 0;
+                }
+                var customerData = {
+                    customerId: isNewCustomer ? null : customerId,
+                    customerName: isNewCustomer ? customerText : null,
+                    customerPhone: isNewCustomer ? customerPhone : null
+                };
+
+                var postData = {
+                    discount: discount,
+                    orderNum: orderNum,
+                    saleDate: saleDate,
+                    customer: customerData,
+                    invoiceDetails: invoiceData
+                };
+
+
+                // Perform AJAX request to submit data
+                $.ajax({
+                    url: '/Sales/SaleDetails', // Update with your controller/action URL
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(postData),
+                    success: function (response) {
+                        if (response.success) {
+                            // Handle success response
+                            $('#edit #successMessage').text('Sales Added Successfully.');
+                            $('#edit #successAlert').show();
+                            var saleId = response.saleId;
+                            updateInvoiceSummaryTable(saleId);
+                            $('html, body').animate({ scrollTop: 0 }, 'fast');
+                        } else {
+                            // Handle failure response
+                            $('#edit #errorMessage').text(response.message || 'Failed to add sales.');
+                            $('#edit #errorAlert').show();
+                            $('html, body').animate({ scrollTop: 0 }, 'fast');
+                        }
+                    },
+
+                    error: function (error) {
+                        // Handle error response
+                        $('#edit #errorMessage').text('An error occurred while submitting the sales data.');
+                        $('#edit #errorAlert').show();
+                        $('html, body').animate({ scrollTop: 0 }, 'fast'); // Scroll to top
+                    }
+                });
+            });
+
+            function updateInvoiceSummaryTable(saleId) {
+                $('#invoiceSummaryTable').DataTable().destroy(); // Destroy the existing DataTable (if any)
+
+                // Fetch details from server using AJAX
+                $.ajax({
+                    url: "/Sales/GetSaleDetails",
+                    type: "GET",
+                    data: { saleId: saleId },
+                    dataType: "json",
+                    success: function (response) {
+                        debugger;
+                        // Assuming response contains data as expected, update the view
+                        var orderInfo = response.orderInfo;
+                        var saleDetails = response.saleDetails;
+
+                        // Update Order Info
+                        var parsedDate = moment(orderInfo.orderDate);
+                        var formattedDate = parsedDate.format('DD MMM, YYYY'); // Format the date as '20 Mar, 2016'
+
+                        $('#orderNumber').text('#' + orderInfo.orderNumber);
+                        $('#orderDate').text(formattedDate);
+
+                        // Update Customer Info
+                        $('#customerName').text(orderInfo.customerName);
+                        $('#phoneNumber').text(orderInfo.customerPhone);
+                        console.log(saleDetails);
+                        // Initialize DataTable with updated data
+                        $('#invoiceSummaryTable').DataTable({
+                            processing: true,
+                            serverSide: false, // Assuming data is fetched completely for DataTable
+                            data: saleDetails,
+                            columns: [
+                                {
+                                    "orderable": false,
+                                    "render": function (data, type, row, meta) {
+                                        return meta.row + 1; // Generate sequential numbers (1, 2, 3, ...)
+                                    }
+                                },
+                                { data: "ItemName", orderable: false },
+                                {
+                                    data: "UnitPrice",
+                                    orderable: true,
+                                    render: function (data, type, row) {
+                                        return parseFloat(data).toFixed(2);
+                                    }
+                                },
+                                { data: "Quantity", orderable: true },
+                                { data: "Discount", orderable: true },
+                                {
+                                    data: "Cost",
+                                    orderable: true,
+                                    render: function (data, type, row) {
+                                        return parseFloat(data).toFixed(2);
+                                    }
+                                }
+                            ],
+                            paging: false, // Disable pagination
+                            searching: false, // Disable search bar
+                            info: false, // Disable info text
+                            lengthChange: false, // Disable "show entries" dropdown
+                          
+                            autoWidth: false,
+                            columnDefs: [
+                                { width: '100px', targets: '_all' }
+                            ],
+                            drawCallback: function () {
+                                // Calculate and update summary values
+                                var subTotal = 0;
+                                var totalDiscount = 0;
+                                var grandTotal = 0;
+
+                                saleDetails.forEach(function (item) {
+                                    subTotal += parseFloat(item.Cost);
+                                });
+
+                                totalDiscount = parseFloat(response.orderInfo.cumulativeDiscount); // Assuming total discount is coming from the server
+                                grandTotal = subTotal - totalDiscount;
+
+                                $('#subTotalInvoiceSummary').text(subTotal.toFixed(2));
+                                $('#discountInvoiceSummary').text(totalDiscount.toFixed(2));
+                                $('#grandTotalInvoiceSummary').text(grandTotal.toFixed(2));
+                            }
+                        });
+                    },
+                    error: function (xhr, status, error) {
+                        console.error('Error fetching sale details:', error);
+                    }
+                });
+            }
+
+
+
+
+
+            // Ensure new product selection marks it as new
+            $('body').on('select2:select', '.product-select', function (e) {
+                var selectedProduct = e.params.data;
+                if (selectedProduct.isNew) {
+                    $(this).find('option:selected').data('isNew', true);
+                }
+            });
+
+
+
+
+
+            //Customer Dropdowns
+
+
+
+            // Initialize the customer dropdown with Select2
+            $('.customerDropdown').select2({
+                placeholder: "Select or type a customer",
+                allowClear: true,
+                tags: true,
+                createTag: function (params) {
+                    var term = $.trim(params.term);
+                    if (term === '') {
+                        return null;
+                    }
+                    return {
+                        id: term,
+                        text: term,
+                        isNew: true
+                    };
+                },
+                ajax: {
+                    url: '/Customer/GetCustomerDetailsForDropdown',
+                    dataType: 'json',
+                    delay: 250,
+                    data: function (params) {
+                        return {
+                            q: params.term // search term
+                        };
+                    },
+                    processResults: function (data) {
+                        return {
+                            results: data.results.map(function (customer) {
+                                return {
+                                    id: customer.id,
+                                    text: customer.name + ' - ' + customer.phoneNumber,
+                                    phoneNumber: customer.phoneNumber
+                                };
+                            })
+                        };
+                    },
+                    cache: true
+                }
+            });
+
+            // Handle customer selection event
+            $('.customerDropdown').on('select2:select', function (e) {
+                var selectedCustomer = e.params.data;
+
+                // If a new customer is created, disable the phone number input
+                if (selectedCustomer.isNew) {
+                    $('.phoneNumber').val('').prop('disabled', false);
+                } else {
+                    // Otherwise, populate the phone number input
+                    $('.phoneNumber').val(selectedCustomer.phoneNumber);
+                }
+            });
+
+            // Clear phone number input when the selection is cleared
+            $('.customerDropdown').on('select2:unselect', function () {
+                $('.phoneNumber').val('').prop('disabled', true);
+            });
+        });
+
+       
+
+    </script>
+}
+
+

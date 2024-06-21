@@ -1,0 +1,163 @@
+﻿
+@{
+    ViewBag.Title = "Details";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="main-content">
+    <div class="breadcrumb">
+        <ul>
+            <li><a href="/Sales/Details">Sales</a></li>
+        </ul>
+    </div>
+    <div class="separator-breadcrumb border-top"></div>
+</div>
+
+<p>
+    <a class="btn btn-primary m-1" href="/Sales/Index">Add Sales</a>
+</p>
+<div class="col-md-12 mb-3">
+
+
+    <div class="card text-start">
+
+        <div class="card-header">
+            <h4 class="text-25 text-muted">Sales List</h4>
+        </div>
+        <div class="alert alert-dismissible fade show alert-card alert-success" role="alert" id="successAlert" style="display:none">
+            <strong class="text-capitalize">Success!</strong> <span id="successMessage"></span>
+            <button class="btn btn-close" type="button" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        <div class="alert alert-dismissible fade show alert-card alert-danger" role="alert" id="errorAlert" style="display:none">
+            <strong class="text-capitalize">Error!</strong> <span id="errorMessage"></span>
+            <button class="btn btn-close" type="button" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover table-bordered table-striped nowrap" id="salesTable">
+                    <thead class="bg-gray-300">
+                        <tr>
+                            <th scope="col">Order Number</th>
+                            <th scope="col">Customer</th>
+                            <th scope="col">Date</th>
+                            <th scope="col">Discount</th>
+                            <th scope="col">Total Ammount</th>
+                            <th scope="col">Action</th>
+                        </tr>
+                    </thead>
+
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+@section scripts
+{
+    <script type="text/javascript">
+        $(document).ready(function () {
+            $('#salesTable').DataTable({
+                "processing": true,
+                "serverSide": false,
+                "ajax": {
+                    "url": "/Sales/GetSalesData",
+                    "type": "GET",
+                    "dataSrc": "data",
+                },
+                "columns": [
+                    { "data": "OrderNumber" },
+                    {
+                        "data": "Customer",
+                        "orderable": false,
+                        "searchable": false
+                    },
+                    {
+                        "data": "Date",
+                        "render": function (data) {
+                            return moment(data).format('DD MMM, YYYY');
+                        }
+                    },
+                    { "data": "Discount" },
+                    { "data": "TotalAmount" },
+                    {
+                        "data": "Id",
+                        "render": function (data) {
+                            return `
+                            <a class='text-success me-2 btn btn-primary m-1 edit-btn' href='/Sales/Edit?SaleId=${data}'><i class='fa fa-edit'></i></a>
+                            <a class='text-danger me-2 btn btn-warning delete-btn' href='#' data-id='${data}'><i class='fa fa-trash'></i></a>
+                        `;
+                        },
+                        "orderable": false,
+                        "searchable": false
+                    }
+                ],
+
+                pagingType: 'full_numbers',
+                language: {
+                    paginate: {
+                        first: 'First',
+                        previous: '&lsaquo;',
+                        next: '&rsaquo;',
+                        last: 'Last'
+                    },
+                    searchPlaceholder: 'Min 3 Characters'
+                },
+                autoWidth: false, // Disable auto width calculation
+                columnDefs: [
+                    { width: '100px', targets: '_all' } // Set a fixed width for all columns, adjust as needed
+                ],
+                drawCallback: function () {
+                    // Override DataTables styles with Bootstrap styles after each draw
+                    $('.dataTables_paginate .paginate_button').removeClass('paginate_button').addClass('page-item');
+                    $('.dataTables_paginate .paginate_button a').removeClass('paginate_button').addClass('page-link');
+                    $('.dataTables_paginate .paginate_button.current').removeClass('paginate_button').addClass('active');
+                    $('.dataTables_paginate .paginate_button.disabled').removeClass('paginate_button').addClass('disabled');
+                }
+            });
+
+            $('#salesTable').on('click', '.delete-btn', function () {
+                var saleId = $(this).data('id');
+
+                bootbox.confirm({
+                    message: "Are you sure you want to delete?",
+                    buttons: {
+                        confirm: {
+                            label: 'Confirm',
+                            className: 'btn-primary'
+                        },
+                        cancel: {
+                            label: 'Cancel',
+                            className: 'btn-secondary'
+                        }
+                    },
+                    callback: function (result) {
+                        if (result) {
+                            $.ajax({
+                                url: '/Sales/DeleteSales/' + saleId,
+                                type: 'POST',
+                                dataType: 'json',
+                                success: function (response) {
+                                    if (response.success) {
+                                        $(' #successMessage').text(response.message);
+                                        $(' #successAlert').fadeIn();
+                                        $(' #successAlert').fadeIn().delay(2000).fadeOut();
+                                        $('#salesTable').DataTable().ajax.reload();
+                                    } else {
+                                        $('#errorMessage').text(response.message);
+                                        $('#errorAlert').fadeIn().delay(2000).fadeOut();
+                                        $('#successAlert').hide();
+                                    }
+                                },
+                                error: function (xhr, status, error) {
+                                    $('#errorMessage').text("An Error Occurred While Deleting Card");
+                                    $('#errorAlert').fadeIn().delay(2000).fadeOut();
+                                    $('#successAlert').hide();
+                                    setTimeout(hideAlerts, 2000);
+                                }
+                            });
+                        }
+                    }
+                });
+            });
+        });
+    </script>
+}

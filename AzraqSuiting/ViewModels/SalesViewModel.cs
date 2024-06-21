@@ -8,6 +8,7 @@ namespace AzraqSuiting.ViewModels
 {
     public class SalesViewModel
     {
+        public int SaleId { get; set; }
         public DateTime saleDate { get; set; } // Sale Date
         public int orderNum { get; set; }
         public decimal discount { get; set; }
@@ -27,8 +28,6 @@ namespace AzraqSuiting.ViewModels
 
     public class InvoiceDetailViewModel
     {
-       
-
         public decimal totalAmount { get; set; } // Total Amount
 
         public int? productId { get; set; } // Nullable ProductId

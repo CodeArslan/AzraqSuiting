@@ -9,6 +9,7 @@ using System.Web.Mvc;
 using AzraqSuiting.HelperMethods;
 using System.Data.Entity;
 using System.IO;
+using ZXing;
 namespace AzraqSuiting.Controllers
 {
     public class ProductController : Controller
@@ -62,6 +63,20 @@ namespace AzraqSuiting.Controllers
         {
             var products = _dbContext.Product.Include(c=>c.Category).Include(b=>b.Brand).ToList();
             return Json(products, JsonRequestBehavior.AllowGet);
+        }
+        [HttpGet]
+        public JsonResult GetProductDataForDropdown(string q)
+        {
+            var products = _dbContext.Product
+                .Where(p => p.Name.Contains(q))
+                .Select(p => new {
+                    id = p.Id,
+                    text = p.Name,
+                    price = p.LatestSalePrice
+                })
+                .ToList();
+
+            return Json(new { results = products }, JsonRequestBehavior.AllowGet);
         }
         [HttpGet]
         public ActionResult GenerateBarcode()

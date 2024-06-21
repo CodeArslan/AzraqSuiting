@@ -61,7 +61,6 @@
                             <th scope="col">Last Updated</th>
                             <th scope="col">Barcode</th>
                             <th scope="col">Barcode Image</th>
-                            <th scope="col">Description</th>
                             <th scope="col">Action</th>
                         </tr>
                     </thead>
@@ -685,12 +684,11 @@
             }
             function bindProductTable() {
                 $("#productTable").DataTable({
+                    "processing": true,
+                    "serverSide": false,
                     ajax: {
                         url: "/Product/GetProductData",
                         dataSrc: "",
-                        beforeSend: function () {
-                            hideSpinner();
-                        }
                     },
                     columns: [
                         {
@@ -794,13 +792,6 @@
                                 return '<img src="' + data + '" alt="Barcode Image" style="width:300px;" />';
                             }
                         },
-
-
-                        {
-                            data: "Description",
-                            orderable: false,
-                            searchable: true
-                        },
                         {
                             data: "Id",
                             render: function (data) {
@@ -837,13 +828,12 @@
             }
             function BindCategoryList() {
                 $("#categoryTable").DataTable({
+                    "processing": true,
+                    "serverSide": false,
                     destroy: true,
                     ajax: {
                         url: "/Product/GetCategoryData",
                         dataSrc: "",
-                        beforeSend: function () {
-                            hideSpinner();
-                        }
                     },
                     columns: [
                         {

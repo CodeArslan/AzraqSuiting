@@ -117,7 +117,7 @@
                         </a>
                         <div class="triangle"></div>
                     </li>
-                    <li class="nav-item no-open" data-item="">
+                    <li class="nav-item" data-item="sales">
                         <a class="nav-item-hold" href="/Sales/Index">
                             <i class="fas fa-dollar-sign fa-lg"></i><span class="nav-text">Sales</span>
                         </a>
@@ -216,6 +216,18 @@
                             </a>
                         </li>*@
                 </ul>
+                <ul class="childNav" data-parent="sales">
+                    <li class="nav-item">
+                        <a href="/Sales/Details">
+                            <i class="fa fa-info-square"></i><span class="item-name" style="margin-left:15px;font-size:15px;">Details</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/Sales/Add">
+                            <i class="fa fa-cart-plus"></i><span class="item-name" style="margin-left:15px;font-size:15px;">Add Sales</span>
+                        </a>
+                    </li>
+                </ul>
 
             </div>
             <div class="sidebar-overlay"></div>
@@ -294,26 +306,33 @@
 <script>
     
    
-    //$(document).ajaxSend(function (event, xhr, settings) {
-    //    var excludedUrls = [
-    //        /Product\/GenerateBarcode/, 
-    //    ];
+    $(document).ajaxSend(function (event, xhr, settings) {
+        var excludedUrls = [
+            /Product\/GenerateBarcode/,
+            /Customer\/GetCustomerDetailsForDropdown/,
+            /Product\/GetProductDataForDropdown/,
+            /Sales\/GetSalesData/,
+            /Product\/GetProductData/,
+            /Product\/GetCategoryData/
+        ];
 
-    //    // Check if the current URL matches any of the excluded patterns
-    //    var isExcluded = excludedUrls.some(function (pattern) {
-    //        return pattern.test(settings.url);
-    //    });
+        // Check if the current URL matches any of the excluded patterns
+        var isExcluded = excludedUrls.some(function (pattern) {
+            return pattern.test(settings.url);
+        });
 
-    //    // If the URL matches any of the excluded patterns, do not show the spinner
-    //    if (isExcluded) {
-    //        return;
-    //    }
-    //    showSpinner(); 
-    //});
+        // If the URL matches any of the excluded patterns, do not show the spinner
+        if (isExcluded) {
+            return;
+        }
 
-    //$(document).ajaxComplete(function (event, xhr, settings) {
-    //    hideSpinner(); 
-    //});
+        showSpinner();
+    });
+
+
+    $(document).ajaxComplete(function (event, xhr, settings) {
+        hideSpinner(); 
+    });
  
     function hideAlerts() {
         $('#successAlert, #errorAlert').fadeOut(2000, function () {

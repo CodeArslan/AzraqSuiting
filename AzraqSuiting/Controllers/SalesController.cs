@@ -6,6 +6,7 @@ using System.Linq;
 using System.Web;
 using System.Web.Mvc;
 using System.Data.Entity;
+using System.Net;
 namespace AzraqSuiting.Controllers
 {
     public class SalesController : Controller
@@ -16,7 +17,7 @@ namespace AzraqSuiting.Controllers
         {
             _dbContext = new ApplicationDbContext();
         }
-        public ActionResult Index()
+        public ActionResult Add()
         {
             int? nextOrderNumber = GetNextOrderNumber();
 
@@ -29,13 +30,67 @@ namespace AzraqSuiting.Controllers
 
             return View();
         }
-        public ActionResult Edit(int SaleId)
+        public ActionResult Details()
         {
-            ViewBag.SaleId = SaleId;
 
             return View();
         }
-        private int? GetNextOrderNumber()
+        public ActionResult Edit(int? SaleId)
+        {
+            if (SaleId == null)
+            {
+                return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
+            }
+
+            ViewBag.SaleId = SaleId;
+            return View();
+        }
+        public ActionResult GetSalesData()
+        {
+            var sales = _dbContext.Sales.Include(s => s.Customer).ToList();
+
+            var data = sales.Select(s => new
+            {
+                OrderNumber = s.OrderNumber,
+                Customer = s.Customer.Name,
+                Date = s.Date.ToString("yyyy-MM-dd"), // Format date as needed
+                Discount = s.Discount,
+                TotalAmount = s.TotalAmount,
+                Id = s.Id
+            }).ToList();
+
+            return Json(new { data = data }, JsonRequestBehavior.AllowGet);
+        }
+
+        [HttpPost]
+        public ActionResult DeleteSales(int id)
+        {
+            try
+            {
+                var sale = _dbContext.Sales.FirstOrDefault(s => s.Id == id);
+                if (sale == null)
+                {
+                    return Json(new { success = false, message = "Sale not found." });
+                }
+
+                // Remove related sale details
+                var saleDetails = _dbContext.SaleDetails.Where(sd => sd.SalesId == id).ToList();
+                _dbContext.SaleDetails.RemoveRange(saleDetails);
+
+                // Remove the sale
+                _dbContext.Sales.Remove(sale);
+                _dbContext.SaveChanges();
+
+                return Json(new { success = true, message = "Sale deleted successfully." });
+            }
+            catch (Exception ex)
+            {
+                // Log the exception (you can use a logging framework)
+                return Json(new { success = false, message = "An error occurred while deleting the sale." });
+            }
+        }
+    
+    private int? GetNextOrderNumber()
         {
             int? nextOrderNumber = null; 
 
@@ -106,7 +161,8 @@ namespace AzraqSuiting.Controllers
                 orderNumber = sale.OrderNumber,
                 orderDate = sale.Date.ToString("yyyy-MM-ddTHH:mm:ss"),
                 customerName = sale.Customer.Name,
-                customerPhone = sale.Customer.PhoneNumber
+                customerPhone = sale.Customer.PhoneNumber,
+                customerId=sale.Customer.Id,
             };
 
             return orderInfo;
@@ -157,50 +213,57 @@ namespace AzraqSuiting.Controllers
                             PhoneNumber = model.Customer.customerPhone
                         };
                         _dbContext.Customer.Add(customer);
-                        _dbContext.SaveChanges(); 
+                        _dbContext.SaveChanges();
                     }
 
-                    // Create new sales record
-                    var sale = new Sales
+                    // Check if we're updating an existing sale or creating a new one
+                    Sales sale;
+                    if (model.SaleId>0)
                     {
-                        Discount=model.discount,
-                        OrderNumber=model.orderNum,
-                        Date = model.saleDate,
-                        TotalAmount = CalculateTotalAmount(model.InvoiceDetails),
-                        CustomerId = customer.Id
-                    };
-                    _dbContext.Sales.Add(sale);
-                    _dbContext.SaveChanges(); 
+                        sale = _dbContext.Sales.Find(model.SaleId);
+                        if (sale == null)
+                        {
+                            return Json(new { success = false, message = "Sale record not found." });
+                        }
+                        // Update existing sale
+                        sale.Discount = model.discount;
+                        sale.OrderNumber = model.orderNum;
+                        sale.Date = model.saleDate;
+                        sale.TotalAmount = CalculateTotalAmount(model.InvoiceDetails);
+                        sale.CustomerId = customer.Id;
 
+                        // Remove existing sale details
+                        var existingSaleDetails = _dbContext.SaleDetails.Where(sd => sd.SalesId == sale.Id);
+                        _dbContext.SaleDetails.RemoveRange(existingSaleDetails);
+                    }
+                    else
+                    {
+                        // Create new sales record
+                        sale = new Sales
+                        {
+                            Discount = model.discount,
+                            OrderNumber = model.orderNum,
+                            Date = model.saleDate,
+                            TotalAmount = CalculateTotalAmount(model.InvoiceDetails),
+                            CustomerId = customer.Id
+                        };
+                        _dbContext.Sales.Add(sale);
+                    }
+                    _dbContext.SaveChanges();
+
+                    // Add new sale details
                     foreach (var detail in model.InvoiceDetails)
                     {
-                        if(detail.productId==null)
+                        var saleDetail = new SaleDetails
                         {
-                            var saleDetail = new SaleDetails
-                            {
-                                Discount = detail.discount,
-                                Quantity = detail.Quantity,
-                                UnitPrice = detail.unitPrice,
-                                ProductId =null,
-                                ProductName=detail.ProductName,
-                                SalesId = sale.Id
-                            };
-                            _dbContext.SaleDetails.Add(saleDetail);
-                        }
-                        else
-                        {
-                            var saleDetail = new SaleDetails
-                            {
-                                Discount=detail.discount,
-                                Quantity = detail.Quantity,
-                                UnitPrice = detail.unitPrice,
-                                ProductId = detail.productId.Value,
-                                SalesId = sale.Id
-                            };
-                            _dbContext.SaleDetails.Add(saleDetail);
-                        }
-                       
-                        
+                            Discount = detail.discount,
+                            Quantity = detail.Quantity,
+                            UnitPrice = detail.unitPrice,
+                            ProductId = detail.productId,
+                            ProductName = detail.productId == null ? detail.ProductName : null, // Only set ProductName if productId is null
+                            SalesId = sale.Id
+                        };
+                        _dbContext.SaleDetails.Add(saleDetail);
                     }
                     _dbContext.SaveChanges();
 
@@ -218,6 +281,7 @@ namespace AzraqSuiting.Controllers
             }
         }
 
+
         // Helper method to calculate total amount based on invoice details
         private decimal CalculateTotalAmount(List<InvoiceDetailViewModel> invoiceDetails)
         {
@@ -228,5 +292,33 @@ namespace AzraqSuiting.Controllers
             }
             return total;
         }
+
+
+
+
+        //edit cases
+
+
+        [HttpGet]
+        public ActionResult GetSaleDetailsForEdit(int saleId)
+        {
+            var saleDetails = _dbContext.SaleDetails
+                .Where(sd => sd.SalesId == saleId)
+                .Select(sd => new
+                {
+                    Id = sd.Id,
+                    ProductId = sd.ProductId,
+                    ProductName = sd.Product != null ? sd.Product.Name : sd.ProductName,
+                    UnitPrice = sd.UnitPrice,
+                    Quantity = sd.Quantity,
+                    Discount = sd.Discount,
+                    Cost = (sd.UnitPrice * sd.Quantity) - sd.Discount,
+                    IsNew = !sd.ProductId.HasValue
+                })
+                .ToList();
+
+            return Json(new { saleDetails }, JsonRequestBehavior.AllowGet);
+        }
+
     }
 }

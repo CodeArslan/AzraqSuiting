@@ -14,15 +14,15 @@
         <div class="col-md-12">
             <ul class="nav nav-tabs justify-content-end mb-4" id="myTab" role="tablist">
                 <li class="nav-item">
-                    <a class="nav-link active" id="invoice-tab" data-bs-toggle="tab" href="#invoice" role="tab" aria-controls="invoice" aria-selected="true">Invoice</a>
+                    <a class="nav-link" id="invoice-tab" data-bs-toggle="tab" href="#invoice" role="tab" aria-controls="invoice" aria-selected="true">Invoice</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" id="edit-tab" data-bs-toggle="tab" href="#edit" role="tab" aria-controls="edit" aria-selected="false">Edit</a>
+                    <a class="nav-link active" id="edit-tab" data-bs-toggle="tab" href="#edit" role="tab" aria-controls="edit" aria-selected="false">Edit</a>
                 </li>
             </ul>
             <div class="card">
                 <div class="tab-content" id="myTabContent">
-                    <div class="tab-pane fade show active" id="invoice" role="tabpanel" aria-labelledby="invoice-tab">
+                    <div class="tab-pane fade" id="invoice" role="tabpanel" aria-labelledby="invoice-tab">
                         <div class="d-sm-flex mb-5" data-view="print">
                             <span class="m-auto"></span>
                             <button class="btn btn-primary mb-sm-0 mb-3 print-invoice">Print Invoice</button>
@@ -79,7 +79,7 @@
                         </div>
                         <!-- ==== / Print Area =====-->
                     </div>
-                    <div class="tab-pane fade" id="edit" role="tabpanel" aria-labelledby="edit-tab">
+                    <div class="tab-pane fade show active" id="edit" role="tabpanel" aria-labelledby="edit-tab">
                         <div class="alert alert-dismissible fade show alert-card alert-success" role="alert" id="successAlert" style="display:none">
                             <strong class="text-capitalize">Success!</strong> <span id="successMessage"></span>
                             <button class="btn btn-close" type="button" data-bs-dismiss="alert" aria-label="Close"></button>
@@ -168,10 +168,10 @@
                                                 </td>
                                                 <td class="unit-price"></td>
                                                 <td>
-                                                    <input class="form-control quantity" type="number" placeholder="Quantity" disabled />
+                                                    <input class="form-control quantity" type="number" placeholder="Quantity" disabled min="1"/>
                                                     <span class="text-danger quantity-error" style="display: none;"></span>
                                                 </td>
-                                                <td><input class="form-control discount" type="number" placeholder="Discount" disabled /></td>
+                                                <td><input class="form-control discount" type="number" placeholder="Discount" disabled min="0" /></td>
                                                 <td class="total">0</td>
                                                 <td><button type="button" class="btn btn-outline-secondary delete-row">Delete</button></td>
                                             </tr>
@@ -185,10 +185,10 @@
                                                 </td>
                                                 <td class="unit-price"></td>
                                                 <td>
-                                                    <input class="form-control quantity" type="number" placeholder="Quantity" disabled />
+                                                    <input class="form-control quantity" type="number" placeholder="Quantity" disabled min="1" />
                                                     <span class="text-danger quantity-error" style="display: none;"></span>
                                                 </td>
-                                                <td><input class="form-control discount" type="number" placeholder="Discount" disabled /></td>
+                                                <td><input class="form-control discount" type="number" placeholder="Discount" disabled min="0"/></td>
                                                 <td class="total">0</td>
                                                 <td><button type="button" class="btn btn-outline-secondary delete-row">Delete</button></td>
                                             </tr>
@@ -202,10 +202,10 @@
                                                 </td>
                                                 <td class="unit-price"></td>
                                                 <td>
-                                                    <input class="form-control quantity" type="number" placeholder="Quantity" disabled />
+                                                    <input class="form-control quantity" type="number" placeholder="Quantity" disabled min="1"/>
                                                     <span class="text-danger quantity-error" style="display: none;"></span>
                                                 </td>
-                                                <td><input class="form-control discount" type="number" placeholder="Discount" disabled /></td>
+                                                <td><input class="form-control discount" type="number" placeholder="Discount" disabled min="0"/></td>
                                                 <td class="total">0</td>
                                                 <td><button type="button" class="btn btn-outline-secondary delete-row">Delete</button></td>
                                             </tr>
@@ -219,10 +219,10 @@
                                                 </td>
                                                 <td class="unit-price"></td>
                                                 <td>
-                                                    <input class="form-control quantity" type="number" placeholder="Quantity" disabled />
+                                                    <input class="form-control quantity" type="number" placeholder="Quantity" disabled min="1" />
                                                     <span class="text-danger quantity-error" style="display: none;"></span>
                                                 </td>
-                                                <td><input class="form-control discount" type="number" placeholder="Discount" disabled /></td>
+                                                <td><input class="form-control discount" type="number" placeholder="Discount" disabled min="0"/></td>
                                                 <td class="total">0</td>
                                                 <td><button type="button" class="btn btn-outline-secondary delete-row">Delete</button></td>
                                             </tr>
@@ -337,7 +337,7 @@
                 var row = $(this).closest('tr');
 
                 row.find('.quantity, .discount').prop('disabled', false);
-
+                row.find('.quantity').val(1);
                 if (selectedProduct.isNew) {
                     // Prompt user to enter price for custom item
                     row.find('.unit-price').html('<input type="number" class="form-control unit-price-input" placeholder="Unit Price" min="0"><span class="unit-price-error text-danger" style="display: none;"></span>');
@@ -370,10 +370,10 @@
             </td>
             <td class="unit-price"></td>
             <td>
-                       <input class="form-control quantity" type="number" placeholder="Quantity" disabled />
+                       <input class="form-control quantity" type="number" placeholder="Quantity" disabled min="1"/>
                        <span class="text-danger quantity-error" style="display: none;"></span>
                    </td>
-            <td><input class="form-control discount" type="number" placeholder="Discount" disabled /></td>
+            <td><input class="form-control discount" type="number" placeholder="Discount" disabled min="0" /></td>
             <td class="total">0</td>
             <td class="align-items-end"><button type="button" class="btn btn-outline-secondary delete-row">Delete</button></td>
         </tr>`;
@@ -457,7 +457,7 @@
                     // Validate only if product is selected or isNewProduct flag is true
                     if ((productId || isNewProduct) && quantity > 0 && unitPrice > 0) {
                         var productData = {
-                            productId: isNewProduct ? null : productId,
+                            productId: isNewProduct ? "" : productId,
                             productName: isNewProduct ? productText : null,
                             quantity: quantity,
                             discount: discount,

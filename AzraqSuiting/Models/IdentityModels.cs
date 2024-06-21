@@ -31,6 +31,10 @@ namespace AzraqSuiting.Models
         public DbSet<Category> Category { get; set; }
         public DbSet<Product> Product { get; set; }
         public DbSet<Brand> Brand { get; set; }
+        public DbSet<Services> Service { get; set; }
+        public DbSet<Customer> Customer { get; set; }
+        public DbSet<SaleDetails> SaleDetails { get; set; }
+        public DbSet<Sales> Sales { get; set; }
         public static ApplicationDbContext Create()
         {
             return new ApplicationDbContext();

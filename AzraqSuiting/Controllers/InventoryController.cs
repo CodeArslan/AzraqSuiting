@@ -39,12 +39,20 @@ namespace AzraqSuiting.Controllers
             };
             return View(viewModel);
         }
-        public ActionResult GetProductDetails()
+        public ActionResult GetProductDetails(string searchText = null)
         {
-            // Fetch product names, codes, and IDs from database
-            var productDetails = _dbContext.Product.Select(p => new { Name = p.Name, Code = p.Code, Id = p.Id }).ToList();
-            return Json(productDetails, JsonRequestBehavior.AllowGet);
+            IQueryable<Product> query = _dbContext.Product;
+
+            if (!string.IsNullOrEmpty(searchText))
+            {
+                query = query.Where(p => p.Name.Contains(searchText) || p.BarCode.Contains(searchText));
+            }
+
+            var products = query.Select(p => new { Name = p.Name, Code = p.Code, Id = p.Id, BarCode = p.BarCode }).ToList();
+
+            return Json(products, JsonRequestBehavior.AllowGet);
         }
+
         public ActionResult ProductDetails(ProductViewModel model)
         {
             ModelState.Remove("Product.Id");

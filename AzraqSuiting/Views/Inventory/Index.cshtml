@@ -50,7 +50,7 @@
                                     <span class="card-title text-muted">Products</span>
                                 </div>
                                 <div class="card-body">
-                                    <input type="text" class="form-control" placeholder="Search Product by Name" aria-label="Search Product by Name">
+                                    <input type="text" id="searchProduct" class="form-control" placeholder="Search Product by Name or Barcode" aria-label="Search Product by Name or Barcode">
                                     <div class="separator-breadcrumb border-top mt-3"></div>
                                     <div id="productList">
 
@@ -105,10 +105,13 @@
                                                     @Html.LabelFor(model => model.Product.BarCode, new { @class = "col-form-label" })
                                                     <div class="input-group">
                                                         @Html.TextBoxFor(model => model.Product.BarCode, new { @class = "form-control disabled-input", @readonly = "readonly", @id = "BarCode", autocomplete = "off", @aria_describedby = "barcode-icon" })
-                                                        <span class="input-group-text" id="barcode-icon">
-                                                            <i class="fas fa-sync-alt" title="Regenerate Barcode" id="spinner-icon"></i>
-                                                        </span>
+                                                       
                                                         @Html.ValidationMessageFor(model => model.Product.BarCode, "", new { @class = "text-danger" })
+                                                        <button class="input-group-text btn btn-outline-primary" id="barcode-icon" type="button" title="Regenarate BarCode" disabled>
+
+                                                            <i class="fas fa-sync-alt" title="Regenerate Barcode" id="spinner-icon"></i>
+
+                                                        </button>
                                                     </div>
                                                 </div>
 
@@ -482,6 +485,7 @@
                     }
                     $('#btnDelete').prop('disabled', false).attr('data-product-id', product.Id);
                     $('#btnUpdate').prop('disabled', false);
+                    $('#barcode-icon').prop('disabled', false);
                 },
                 error: function (xhr, status, error) {
                     console.error('Error fetching product details:', error);
@@ -535,29 +539,36 @@
             $('html, body').animate({ scrollTop: 0 }, 'fast');
         }
         $(document).ready(function () {
-            function fetchProductDetails() {
+            function fetchProductDetails(searchText= null) {
                 $.ajax({
                     url: '/Inventory/GetProductDetails',
                     type: 'GET',
+                    data: { searchText: searchText },
                     success: function (response) {
                         $('#productList').empty();
-                        response.forEach(function (product) {
-                            var productCard = '<a href="javascript:void(0);" class="product-card text-12 d-flex justify-content-between align-items-center" data-product-id="' + product.Id + '">' +
-                                '<span class="text-12">' + product.Code + ' - ' + product.Name + '</span>' +
-                                '<i class="fas fa-arrow-right"></i></a>';
-                            $('#productList').append(productCard);
-                        });
-
+                        if (response == null || response.length === 0) {
+                            $('#productList').html('<span class="text-muted text-14">No Products Found !!</span>');
+                        } else {
+                            response.forEach(function (product) {
+                                var productCard = '<a href="javascript:void(0);" class="product-card text-12 d-flex justify-content-between align-items-center" data-product-id="' + product.Id + '">' +
+                                    '<span class="text-12">' + product.Code + ' - ' + product.Name + ' - ' + product.BarCode + '</span>' +
+                                    '<i class="fas fa-arrow-right"></i></a>';
+                                $('#productList').append(productCard);
+                            });
+                        }
                     },
                     error: function (xhr, status, error) {
                         console.error('Error fetching product details:', error);
                     }
                 });
-            }
+        }
+        fetchProductDetails();
 
-
-            // Call the function to fetch product details when the page loads
-            fetchProductDetails();
+            // Function to handle search input changes
+            $('#searchProduct').on('input', function () {
+                var searchText = $(this).val().toLowerCase().trim(); // Trim whitespace
+                fetchProductDetails(searchText); // Call fetchProductDetails with search text
+            });
             $('#categoryDropdown').on('click', '.dropdown-item', function () {
                 $('#categoryDropdown .dropdown-item').removeClass('active');
                 $(this).addClass('active');

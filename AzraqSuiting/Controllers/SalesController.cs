@@ -7,6 +7,8 @@ using System.Web;
 using System.Web.Mvc;
 using System.Data.Entity;
 using System.Net;
+using System.Threading.Tasks;
+using Hangfire;
 namespace AzraqSuiting.Controllers
 {
     public class SalesController : Controller
@@ -90,7 +92,7 @@ namespace AzraqSuiting.Controllers
             }
         }
     
-    private int? GetNextOrderNumber()
+        private int? GetNextOrderNumber()
         {
             int? nextOrderNumber = null; 
 
@@ -190,6 +192,7 @@ namespace AzraqSuiting.Controllers
         [HttpPost]
         public ActionResult SaleDetails(SalesViewModel model)
         {
+            ModelState.Remove("SaleId");
             if (ModelState.IsValid)
             {
                 try
@@ -245,7 +248,8 @@ namespace AzraqSuiting.Controllers
                             OrderNumber = model.orderNum,
                             Date = model.saleDate,
                             TotalAmount = CalculateTotalAmount(model.InvoiceDetails),
-                            CustomerId = customer.Id
+                            CustomerId = customer.Id,
+                            Instructions= model.instructions,
                         };
                         _dbContext.Sales.Add(sale);
                     }
@@ -266,7 +270,7 @@ namespace AzraqSuiting.Controllers
                         _dbContext.SaleDetails.Add(saleDetail);
                     }
                     _dbContext.SaveChanges();
-
+                    BackgroundJob.Enqueue(() => UpdateAverageCostAndInventoryAsync(model.InvoiceDetails));
                     return Json(new { success = true, message = "Sale details saved successfully", saleId = sale.Id });
                 }
                 catch (Exception ex)
@@ -292,7 +296,51 @@ namespace AzraqSuiting.Controllers
             }
             return total;
         }
+        public async Task UpdateAverageCostAndInventoryAsync(List<InvoiceDetailViewModel> invoiceDetails)
+        {
+            foreach (var detail in invoiceDetails)
+            {
+                if (detail.productId != null)
+                {
+                    var product = await _dbContext.Product.FindAsync(detail.productId);
+                    if (product != null)
+                    {
+                        // Get all sales details for the product asynchronously
+                        var salesDetailsForProduct = await _dbContext.SaleDetails
+                                                            .Where(sd => sd.ProductId == detail.productId)
+                                                            .ToListAsync();
 
+                        // Calculate total cost and total quantity from sales details
+                        decimal totalCost = 0;
+                        int totalQuantity = 0;
+
+                        foreach (var saleDetail in salesDetailsForProduct)
+                        {
+                            totalCost += saleDetail.UnitPrice * saleDetail.Quantity;
+                            totalQuantity += saleDetail.Quantity;
+                        }
+
+                        // Add the current sale's contribution to total cost and quantity
+                        totalCost += detail.unitPrice * detail.Quantity;
+                        totalQuantity += detail.Quantity;
+
+                        // Calculate new average cost
+                        decimal newAverageCost = totalCost / totalQuantity;
+
+                        // Update product's average cost
+                        product.AverageCost = newAverageCost;
+
+                        // Deduct meters per suit from product's current stock
+                        decimal metersToDeduct = detail.Quantity * product.MeterPerSuit;
+                        product.CurrentStock -= metersToDeduct;
+
+                        _dbContext.Entry(product).State = EntityState.Modified;
+                    }
+                }
+            }
+
+            await _dbContext.SaveChangesAsync(); // Save changes asynchronously
+        }
 
 
 

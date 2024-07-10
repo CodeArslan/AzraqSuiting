@@ -30,6 +30,7 @@
                         <div id="print-area">
                             <div class="row">
                                 <div class="col-md-6">
+                                    <input type="hidden" id="hdnSaleId"/>
                                     <h4 class="fw-bold">Order Info</h4>
                                     <p id="orderNumber"></p>
                                 </div>
@@ -124,9 +125,13 @@
                             </div>
                             <div class="mt-3 mb-4 border-top"></div>
                             <div class="row mb-5">
-                                <div class="col-md-8">
-
+                                <div class="col-md-4">
+                                    <h5 class="fw-bold">Instructions</h5>
+                                    <div class="col-md-10 form-group">
+                                        @Html.TextArea("Instructions", new { @class = "form-control", @id = "Instructions", @rows = "4", autocomplete = "off",@placeholder="Enter Instructions for the Product" })
+                                    </div>
                                 </div>
+                                <div class="col-md-4"></div>
                                 <div class="col-md-4 text-end">
                                     <h5 class="fw-bold">Bill To</h5>
                                     <div class="col-md-10 offset-md-2 form-group mb-3 pe-0">
@@ -175,57 +180,7 @@
                                                 <td class="total">0</td>
                                                 <td><button type="button" class="btn btn-outline-secondary delete-row">Delete</button></td>
                                             </tr>
-                                            <tr>
-                                                <th scope="row">2</th>
-                                                <td>
-                                                    <select class="form-control product-select" style="width: 100%;">
-                                                        <option value="">Select a product</option>
-                                                        <!-- Options will be populated from the product table -->
-                                                    </select>
-                                                </td>
-                                                <td class="unit-price"></td>
-                                                <td>
-                                                    <input class="form-control quantity" type="number" placeholder="Quantity" disabled min="1" />
-                                                    <span class="text-danger quantity-error" style="display: none;"></span>
-                                                </td>
-                                                <td><input class="form-control discount" type="number" placeholder="Discount" disabled min="0"/></td>
-                                                <td class="total">0</td>
-                                                <td><button type="button" class="btn btn-outline-secondary delete-row">Delete</button></td>
-                                            </tr>
-                                            <tr>
-                                                <th scope="row">3</th>
-                                                <td>
-                                                    <select class="form-control product-select" style="width: 100%;">
-                                                        <option value="">Select a product</option>
-                                                        <!-- Options will be populated from the product table -->
-                                                    </select>
-                                                </td>
-                                                <td class="unit-price"></td>
-                                                <td>
-                                                    <input class="form-control quantity" type="number" placeholder="Quantity" disabled min="1"/>
-                                                    <span class="text-danger quantity-error" style="display: none;"></span>
-                                                </td>
-                                                <td><input class="form-control discount" type="number" placeholder="Discount" disabled min="0"/></td>
-                                                <td class="total">0</td>
-                                                <td><button type="button" class="btn btn-outline-secondary delete-row">Delete</button></td>
-                                            </tr>
-                                            <tr>
-                                                <th scope="row">4</th>
-                                                <td>
-                                                    <select class="form-control product-select" style="width: 100%;">
-                                                        <option value="">Select a product</option>
-                                                        <!-- Options will be populated from the product table -->
-                                                    </select>
-                                                </td>
-                                                <td class="unit-price"></td>
-                                                <td>
-                                                    <input class="form-control quantity" type="number" placeholder="Quantity" disabled min="1" />
-                                                    <span class="text-danger quantity-error" style="display: none;"></span>
-                                                </td>
-                                                <td><input class="form-control discount" type="number" placeholder="Discount" disabled min="0"/></td>
-                                                <td class="total">0</td>
-                                                <td><button type="button" class="btn btn-outline-secondary delete-row">Delete</button></td>
-                                            </tr>
+                                         
                                         </tbody>
                                     </table>
 
@@ -321,13 +276,31 @@
                             results: data.results.map(function (product) {
                                 return {
                                     id: product.id,
-                                    text: product.text,
-                                    price: product.price
+                                    text: product.currentStock < 4 ? product.text + ' (out of stock)' : product.text,
+                                    price: product.price,
+                                    metersPerSuit: product.metersPerSuit,
+                                    currentStock: product.currentStock,
+                                    disabled: product.currentStock < 4 // Disable option if stock is less than 4
                                 };
                             })
                         };
                     },
                     cache: true
+                },
+                templateResult: function (data) {
+                    if (!data.id) {
+                        return data.text;
+                    }
+
+                    var $result = $(
+                        '<span>' + data.text + '</span>'
+                    );
+
+                    if (data.currentStock < 4) {
+                        $result.css('color', 'red'); // Optional: style out of stock items differently
+                    }
+
+                    return $result;
                 }
             });
 
@@ -350,7 +323,16 @@
 
                 // Calculate total
                 calculateTotal(row);
+                checkStockAvailability(selectedProduct, row);
             });
+            function checkStockAvailability(selectedProduct, row) {
+                var metersPerSuit = selectedProduct.metersPerSuit;
+                var currentStock = selectedProduct.currentStock;
+
+                // Disable options that exceed stock limits based on meters per suit
+                row.find('.quantity').attr('max', Math.floor(currentStock / metersPerSuit));
+            }
+
 
             // Handle quantity, discount and unit price input changes to recalculate total
             $('body').on('input', '.quantity, .discount, .unit-price-input', function () {
@@ -407,13 +389,31 @@
                                 results: data.results.map(function (product) {
                                     return {
                                         id: product.id,
-                                        text: product.text,
-                                        price: product.price
+                                        text: product.currentStock < 4 ? product.text + ' (out of stock)' : product.text,
+                                        price: product.price,
+                                        metersPerSuit: product.metersPerSuit,
+                                        currentStock: product.currentStock,
+                                        disabled: product.currentStock < 4 // Disable option if stock is less than 4
                                     };
                                 })
                             };
                         },
                         cache: true
+                    },
+                    templateResult: function (data) {
+                        if (!data.id) {
+                            return data.text;
+                        }
+
+                        var $result = $(
+                            '<span>' + data.text + '</span>'
+                        );
+
+                        if (data.currentStock < 4) {
+                            $result.css('color', 'red'); // Optional: style out of stock items differently
+                        }
+
+                        return $result;
                     }
                 });
             }
@@ -526,13 +526,16 @@
                     customerName: isNewCustomer ? customerText : null,
                     customerPhone: isNewCustomer ? customerPhone : null
                 };
-
+                var instructions = $("#Instructions").val();
+                var SaleId = $("#hdnSaleId").val();
                 var postData = {
                     discount: discount,
                     orderNum: orderNum,
                     saleDate: saleDate,
                     customer: customerData,
-                    invoiceDetails: invoiceData
+                    invoiceDetails: invoiceData,
+                    instructions: instructions,
+                    SaleId: SaleId
                 };
 
 
@@ -548,6 +551,7 @@
                             $('#edit #successMessage').text('Sales Added Successfully.');
                             $('#edit #successAlert').show();
                             var saleId = response.saleId;
+                            $("#hdnSaleId").val(saleId);
                             updateInvoiceSummaryTable(saleId);
                             $('html, body').animate({ scrollTop: 0 }, 'fast');
                         } else {

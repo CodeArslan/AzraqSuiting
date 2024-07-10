@@ -8,6 +8,7 @@ namespace AzraqSuiting.ViewModels
 {
     public class SalesViewModel
     {
+        public string instructions { get; set; }
         public int SaleId { get; set; }
         public DateTime saleDate { get; set; } // Sale Date
         public int orderNum { get; set; }

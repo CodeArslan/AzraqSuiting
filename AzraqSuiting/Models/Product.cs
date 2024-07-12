@@ -43,6 +43,12 @@ namespace AzraqSuiting.Models
         [DisplayFormat(DataFormatString = "{0:F2}")]
         public decimal CurrentStock { get; set; }
 
+        [Display(Name = "Meter Per Suit")]
+        [Range(0, double.MaxValue, ErrorMessage = "Meter Per Suit cannot be negative")]
+        [Required]
+        [DisplayFormat(DataFormatString = "{0:F2}")]
+        public decimal MeterPerSuit { get; set; }
+
         [Display(Name = "Date Added")]
         public DateTime DateAdded { get; set; }=DateTime.Now;
 

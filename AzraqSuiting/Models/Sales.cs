@@ -24,6 +24,9 @@ namespace AzraqSuiting.Models
         [Required]
         public int? CustomerId { get; set; }
         public Customer Customer { get; set; }
+        [Display(Name = "Customer")]
+        public string Instructions { get; set; }
+
 
     }
 }

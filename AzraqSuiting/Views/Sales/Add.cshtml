@@ -42,9 +42,9 @@
                             <div class="mt-3 mb-4 border-top"></div>
                             <div class="row mb-5">
                                 <div class="col-md-6 mb-3 mb-sm-0">
-                                    @*<h5 class="fw-bold">Bill From</h5>
-                                    <p>New Age Inc.</p>
-                                    <span style="white-space: pre-line">rodriguez.trent@senger.com 61 Johnson St. Shirley, NY 11967. +202-555-0170</span>*@
+                                    <h5 class="fw-bold">Instructions</h5>
+                                    <p id="instructions"></p>
+                                    @*<span style="white-space: pre-line">rodriguez.trent@senger.com 61 Johnson St. Shirley, NY 11967. +202-555-0170</span>*@
                                 </div>
                                 <div class="col-md-6 text-sm-end">
                                     <h5 class="fw-bold">Bill To</h5>
@@ -274,13 +274,25 @@
                     processResults: function (data) {
                         return {
                             results: data.results.map(function (product) {
+                                var suitsAvailable = product.currentStock / product.metersPerSuit;
+                                var displayText = product.text;
+                                debugger;
+                                if (suitsAvailable > 5) {
+                                    displayText += ' (in stock)';
+                                } else if (suitsAvailable < 1) {
+                                    displayText += ' (out of stock)';
+                                }
+                                else {
+                                    displayText += ' (' + suitsAvailable.toFixed(0) + ' available)';
+                                }
+
                                 return {
                                     id: product.id,
-                                    text: product.currentStock < 4 ? product.text + ' (out of stock)' : product.text,
+                                    text: displayText,
                                     price: product.price,
                                     metersPerSuit: product.metersPerSuit,
                                     currentStock: product.currentStock,
-                                    disabled: product.currentStock < 4 // Disable option if stock is less than 4
+                                    disabled: suitsAvailable < 1 // Disable option if less than 1 suit is available
                                 };
                             })
                         };
@@ -292,17 +304,16 @@
                         return data.text;
                     }
 
-                    var $result = $(
-                        '<span>' + data.text + '</span>'
-                    );
+                    var $result = $('<span>' + data.text + '</span>');
 
-                    if (data.currentStock < 4) {
+                    if (data.currentStock / data.metersPerSuit < 1) {
                         $result.css('color', 'red'); // Optional: style out of stock items differently
                     }
 
                     return $result;
                 }
             });
+
 
             // Handle product selection event to set unit price and enable inputs
             $('body').on('select2:select', '.product-select', function (e) {
@@ -387,13 +398,25 @@
                         processResults: function (data) {
                             return {
                                 results: data.results.map(function (product) {
+                                    var suitsAvailable = product.currentStock / product.metersPerSuit;
+                                    var displayText = product.text;
+                                    debugger;
+                                    if (suitsAvailable > 5) {
+                                        displayText += ' (in stock)';
+                                    } else if (suitsAvailable < 1) {
+                                        displayText += ' (out of stock)';
+                                    }
+                                    else {
+                                        displayText += ' (' + suitsAvailable.toFixed(0) + ' available)';
+                                    }
+
                                     return {
                                         id: product.id,
-                                        text: product.currentStock < 4 ? product.text + ' (out of stock)' : product.text,
+                                        text: displayText,
                                         price: product.price,
                                         metersPerSuit: product.metersPerSuit,
                                         currentStock: product.currentStock,
-                                        disabled: product.currentStock < 4 // Disable option if stock is less than 4
+                                        disabled: suitsAvailable < 1 // Disable option if less than 1 suit is available
                                     };
                                 })
                             };
@@ -405,11 +428,9 @@
                             return data.text;
                         }
 
-                        var $result = $(
-                            '<span>' + data.text + '</span>'
-                        );
+                        var $result = $('<span>' + data.text + '</span>');
 
-                        if (data.currentStock < 4) {
+                        if (data.currentStock / data.metersPerSuit < 1) {
                             $result.css('color', 'red'); // Optional: style out of stock items differently
                         }
 
@@ -430,7 +451,7 @@
                 addRow();
             });
             $('#submit-button').click(function () {
-                // Reset previous error messages
+               
                 $('.quantity-error').hide().text('');
                 $('.unit-price-error').hide().text('');
                 $('.dateError').hide().text('');
@@ -441,7 +462,7 @@
 
                 var invoiceData = [];
 
-                // Flag to track if there are any validation errors
+              
                 var hasErrors = false;
 
                 $('#invoice-table tbody tr').each(function () {
@@ -549,7 +570,8 @@
                         if (response.success) {
                             // Handle success response
                             $('#edit #successMessage').text('Sales Added Successfully.');
-                            $('#edit #successAlert').show();
+                            $('#edit #successAlert').fadeIn().delay(2000).fadeOut();
+
                             var saleId = response.saleId;
                             $("#hdnSaleId").val(saleId);
                             updateInvoiceSummaryTable(saleId);
@@ -557,7 +579,7 @@
                         } else {
                             // Handle failure response
                             $('#edit #errorMessage').text(response.message || 'Failed to add sales.');
-                            $('#edit #errorAlert').show();
+                            $('#edit #errorAlert').fadeIn().delay(2000).fadeOut();
                             $('html, body').animate({ scrollTop: 0 }, 'fast');
                         }
                     },
@@ -581,7 +603,6 @@
                     data: { saleId: saleId },
                     dataType: "json",
                     success: function (response) {
-                        debugger;
                         // Assuming response contains data as expected, update the view
                         var orderInfo = response.orderInfo;
                         var saleDetails = response.saleDetails;
@@ -596,7 +617,7 @@
                         // Update Customer Info
                         $('#customerName').text(orderInfo.customerName);
                         $('#phoneNumber').text(orderInfo.customerPhone);
-                        console.log(saleDetails);
+                        $('#instructions').text(orderInfo.instructions);
                         // Initialize DataTable with updated data
                         $('#invoiceSummaryTable').DataTable({
                             processing: true,

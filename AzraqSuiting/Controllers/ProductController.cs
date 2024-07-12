@@ -75,7 +75,7 @@ namespace AzraqSuiting.Controllers
                     price = p.LatestSalePrice,
                     metersPerSuit = p.MeterPerSuit,
                     currentStock = p.CurrentStock,
-                    isOutOfStock = p.CurrentStock < 4
+                    isOutOfStock = p.CurrentStock < p.MeterPerSuit
                 })
                 .ToList();
 

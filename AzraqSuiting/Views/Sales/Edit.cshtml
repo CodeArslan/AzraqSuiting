@@ -43,9 +43,9 @@
                             <div class="mt-3 mb-4 border-top"></div>
                             <div class="row mb-5">
                                 <div class="col-md-6 mb-3 mb-sm-0">
-                                    @*<h5 class="fw-bold">Bill From</h5>
-                                        <p>New Age Inc.</p>
-                                        <span style="white-space: pre-line">rodriguez.trent@senger.com 61 Johnson St. Shirley, NY 11967. +202-555-0170</span>*@
+                                    <h5 class="fw-bold">Instructions</h5>
+                                    <p id="instructions"></p>
+                                    @*<span style="white-space: pre-line">rodriguez.trent@senger.com 61 Johnson St. Shirley, NY 11967. +202-555-0170</span>*@
                                 </div>
                                 <div class="col-md-6 text-sm-end">
                                     <h5 class="fw-bold">Bill To</h5>
@@ -98,6 +98,7 @@
                         <form>
                             <div class="row justify-content-between">
                                 <div class="col-md-6">
+                                    <input type="hidden" id="hdnSalesId"/>
                                     <h4 class="fw-bold">Order Info</h4>
                                     <div class="col-sm-4 form-group mb-3 ps-0">
                                         <label for="orderNo">Order Number</label>
@@ -126,9 +127,13 @@
                             </div>
                             <div class="mt-3 mb-4 border-top"></div>
                             <div class="row mb-5">
-                                <div class="col-md-8">
-
+                                <div class="col-md-4">
+                                    <h5 class="fw-bold">Instructions</h5>
+                                    <div class="col-md-10 form-group">
+                                        @Html.TextArea("Instructions", new { @class = "form-control", @id = "Instructions", @rows = "4", autocomplete = "off", @placeholder = "Enter Instructions for the Product" })
+                                    </div>
                                 </div>
+                                <div class="col-md-4"></div>
                                 <div class="col-md-4 text-end">
                                     <h5 class="fw-bold">Bill To</h5>
                                     <div class="col-md-10 offset-md-2 form-group mb-3 pe-0">
@@ -192,10 +197,9 @@
 
         $(document).ready(function () {
             var saleId = '@ViewBag.SaleId';
+            $("#hdnSalesId").val(saleId);
             updateInvoiceSummaryTable(saleId);
             populateEditTable(saleId);
-            console.log(saleId);
-
             $('.customerDropdown').select2({
                 placeholder: "Select or type a customer",
                 allowClear: true,
@@ -275,10 +279,13 @@
                         $('#orderNumber').text('#' + orderInfo.orderNumber);
                         $('#orderDate').text(formattedDate);
 
+
                         // Update Customer Info
                         $('#customerName').text(orderInfo.customerName);
                         $('.phoneNumber').val(orderInfo.customerPhone);
                         $('#phoneNumber').text(orderInfo.customerPhone);
+                        $('#instructions').text(orderInfo.instructions);
+                        $('#Instructions').val(orderInfo.instructions);
                         $('.customerDropdown').select2({
                             placeholder: "Select or type a customer",
                             allowClear: true,
@@ -450,15 +457,43 @@
                                 processResults: function (data) {
                                     return {
                                         results: data.results.map(function (product) {
+                                            var suitsAvailable = product.currentStock / product.metersPerSuit;
+                                            var displayText = product.text;
+                                            debugger;
+                                            if (suitsAvailable > 5) {
+                                                displayText += ' (in stock)';
+                                            } else if (suitsAvailable < 1) {
+                                                displayText += ' (out of stock)';
+                                            }
+                                            else {
+                                                displayText += ' (' + suitsAvailable.toFixed(0) + ' available)';
+                                            }
+
                                             return {
                                                 id: product.id,
-                                                text: product.text,
-                                                price: product.price
+                                                text: displayText,
+                                                price: product.price,
+                                                metersPerSuit: product.metersPerSuit,
+                                                currentStock: product.currentStock,
+                                                disabled: suitsAvailable < 1 // Disable option if less than 1 suit is available
                                             };
                                         })
                                     };
                                 },
                                 cache: true
+                            },
+                            templateResult: function (data) {
+                                if (!data.id) {
+                                    return data.text;
+                                }
+
+                                var $result = $('<span>' + data.text + '</span>');
+
+                                if (data.currentStock / data.metersPerSuit < 1) {
+                                    $result.css('color', 'red'); // Optional: style out of stock items differently
+                                }
+
+                                return $result;
                             }
                         });
                     },
@@ -570,15 +605,43 @@
                         processResults: function (data) {
                             return {
                                 results: data.results.map(function (product) {
+                                    var suitsAvailable = product.currentStock / product.metersPerSuit;
+                                    var displayText = product.text;
+                                    debugger;
+                                    if (suitsAvailable > 5) {
+                                        displayText += ' (in stock)';
+                                    } else if (suitsAvailable < 1) {
+                                        displayText += ' (out of stock)';
+                                    }
+                                    else {
+                                        displayText += ' (' + suitsAvailable.toFixed(0) + ' available)';
+                                    }
+
                                     return {
                                         id: product.id,
-                                        text: product.text,
-                                        price: product.price
+                                        text: displayText,
+                                        price: product.price,
+                                        metersPerSuit: product.metersPerSuit,
+                                        currentStock: product.currentStock,
+                                        disabled: suitsAvailable < 1 
                                     };
                                 })
                             };
                         },
                         cache: true
+                    },
+                    templateResult: function (data) {
+                        if (!data.id) {
+                            return data.text;
+                        }
+
+                        var $result = $('<span>' + data.text + '</span>');
+
+                        if (data.currentStock / data.metersPerSuit < 1) {
+                            $result.css('color', 'red'); 
+                        }
+
+                        return $result;
                     }
                 });
             }
@@ -688,7 +751,7 @@
                 }
                 var orderNum = $("#orderNo").val();
                 var discount = $("#discountInvoice").val();
-                var SaleId = 24;
+                var SaleId = $("#hdnSalesId").val();
                 if (discount === null || discount === "") {
                     discount = 0;
                 }
@@ -697,14 +760,15 @@
                     customerName: isNewCustomer ? customerText : null,
                     customerPhone: isNewCustomer ? customerPhone : null
                 };
-
+                var instructions = $("#Instructions").val();
                 var postData = {
                     SaleId: SaleId,
                     discount: discount,
                     orderNum: orderNum,
                     saleDate: saleDate,
                     customer: customerData,
-                    invoiceDetails: invoiceData
+                    invoiceDetails: invoiceData,
+                    instructions: instructions,
                 };
 
                 // Perform AJAX request to submit data

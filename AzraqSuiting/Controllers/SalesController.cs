@@ -67,31 +67,47 @@ namespace AzraqSuiting.Controllers
         [HttpPost]
         public ActionResult DeleteSales(int id)
         {
-            try
+            using (var transaction = _dbContext.Database.BeginTransaction())
             {
-                var sale = _dbContext.Sales.FirstOrDefault(s => s.Id == id);
-                if (sale == null)
+                try
                 {
-                    return Json(new { success = false, message = "Sale not found." });
+                    var sale = _dbContext.Sales.FirstOrDefault(s => s.Id == id);
+                    if (sale == null)
+                    {
+                        return Json(new { success = false, message = "Sale not found." });
+                    }
+
+                    var saleDetails = _dbContext.SaleDetails.Where(sd => sd.SalesId == id).ToList();
+
+                    foreach (var detail in saleDetails)
+                    {
+                        var product = _dbContext.Product.FirstOrDefault(p => p.Id == detail.ProductId);
+                        if (product != null)
+                        {
+                            decimal meterstoAdd = detail.Quantity * product.MeterPerSuit;
+                            product.CurrentStock += meterstoAdd;
+                        }
+                    }
+
+                    _dbContext.SaleDetails.RemoveRange(saleDetails);
+
+                    _dbContext.Sales.Remove(sale);
+                    _dbContext.SaveChanges();
+
+                    transaction.Commit();
+
+                    return Json(new { success = true, message = "Sale deleted and inventory updated successfully." });
                 }
-
-                // Remove related sale details
-                var saleDetails = _dbContext.SaleDetails.Where(sd => sd.SalesId == id).ToList();
-                _dbContext.SaleDetails.RemoveRange(saleDetails);
-
-                // Remove the sale
-                _dbContext.Sales.Remove(sale);
-                _dbContext.SaveChanges();
-
-                return Json(new { success = true, message = "Sale deleted successfully." });
-            }
-            catch (Exception ex)
-            {
-                // Log the exception (you can use a logging framework)
-                return Json(new { success = false, message = "An error occurred while deleting the sale." });
+                catch (Exception ex)
+                {
+                    transaction.Rollback();
+                    // Log the exception (you can use a logging framework)
+                    return Json(new { success = false, message = "An error occurred while deleting the sale and updating the inventory." });
+                }
             }
         }
-    
+
+
         private int? GetNextOrderNumber()
         {
             int? nextOrderNumber = null; 
@@ -165,6 +181,7 @@ namespace AzraqSuiting.Controllers
                 customerName = sale.Customer.Name,
                 customerPhone = sale.Customer.PhoneNumber,
                 customerId=sale.Customer.Id,
+                instructions=sale.Instructions
             };
 
             return orderInfo;
@@ -183,7 +200,8 @@ namespace AzraqSuiting.Controllers
                     UnitPrice = sd.UnitPrice,
                     Quantity = sd.Quantity,
                     Discount=sd.Discount,
-                    Cost = (sd.UnitPrice * sd.Quantity) - sd.Discount
+                    Cost = (sd.UnitPrice * sd.Quantity) - sd.Discount,
+                    
                 })
                 .ToList();
 
@@ -234,6 +252,7 @@ namespace AzraqSuiting.Controllers
                         sale.Date = model.saleDate;
                         sale.TotalAmount = CalculateTotalAmount(model.InvoiceDetails);
                         sale.CustomerId = customer.Id;
+                        sale.Instructions = model.instructions;
 
                         // Remove existing sale details
                         var existingSaleDetails = _dbContext.SaleDetails.Where(sd => sd.SalesId == sale.Id);

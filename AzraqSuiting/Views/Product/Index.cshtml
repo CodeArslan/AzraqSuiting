@@ -92,7 +92,6 @@
                     <div class="row">
                         <div class="col-md-6">
                             <div class="form-group">
-                                @Html.HiddenFor(m => m.Product.Id, new { @id = "productId" })
                                 @Html.LabelFor(model => model.Product.Code, new { @class = "col-form-label" })
                                 @Html.TextBoxFor(model => model.Product.Code, new { @class = "form-control disabled-input", @id = "productCode", @readonly = "readonly", autocomplete = "off" })
                                 @Html.ValidationMessageFor(model => model.Product.Code, "", new { @class = "text-danger" })

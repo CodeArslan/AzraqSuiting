@@ -123,6 +123,11 @@
                             <i class="fas fa-dollar-sign fa-lg"></i><span class="nav-text">Sales</span>
                         </a>
                     </li>
+                    <li class="nav-item no-open" data-item="">
+                        <a class="nav-item-hold" href="/Purchase/Index">
+                            <i class="fas fa-cart-plus fa-lg"></i><span class="nav-text">Purchase</span>
+                        </a>
+                    </li>
                     @*<li class="nav-item" data-item="attendance">
                             <a class="nav-item-hold" href="#">
                                 <i class="fa fa-clock fa-lg"></i><span class="nav-text">Attendance</span>
@@ -298,7 +303,7 @@
     <script src="~/Scripts/custom-sidebar.large.script.js"></script>
     <script src="~/lib/select2/js/select2.min.js"></script>
     <script src="~/Scripts/custom-sidebar.js"></script>
-    @*<script src="~/Scripts/inputmask/jquery.inputmask.min.js"></script>*@
+    <script src="~/lib/inputmask/inputmask/inputmask.min.js"></script>
     @Scripts.Render("~/bundles/jqueryval")
     @RenderSection("scripts", required: false)
 </body>
@@ -315,7 +320,8 @@
             /Sales\/GetSalesData/,
             /Product\/GetProductData/,
             /Product\/GetCategoryData/, 
-            /Inventory\/GetProductDetails/
+            /Inventory\/GetProductDetails/,
+            /Supplier\/GetSupplierForDropdown/
         ];
 
         // Check if the current URL matches any of the excluded patterns

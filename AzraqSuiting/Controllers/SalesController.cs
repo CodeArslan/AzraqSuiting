@@ -272,6 +272,7 @@ namespace AzraqSuiting.Controllers
                         };
                         _dbContext.Sales.Add(sale);
                     }
+                    
                     _dbContext.SaveChanges();
 
                     // Add new sale details
@@ -287,9 +288,15 @@ namespace AzraqSuiting.Controllers
                             SalesId = sale.Id
                         };
                         _dbContext.SaleDetails.Add(saleDetail);
+                       
                     }
                     _dbContext.SaveChanges();
                     BackgroundJob.Enqueue(() => UpdateAverageCostAndInventoryAsync(model.InvoiceDetails));
+                    model.Customer.customerName=customer.Name;
+                    model.Customer.customerPhone=customer.PhoneNumber;
+                    
+                    var printerService = new PrinterService(); 
+                    printerService.PrintInvoice(model);
                     return Json(new { success = true, message = "Sale details saved successfully", saleId = sale.Id });
                 }
                 catch (Exception ex)

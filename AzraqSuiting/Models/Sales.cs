@@ -27,6 +27,8 @@ namespace AzraqSuiting.Models
         [Display(Name = "Customer")]
         public string Instructions { get; set; }
 
+        public decimal CashPaid { get; set; }
+        public decimal Balance { get; set; }
 
     }
 }

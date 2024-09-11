@@ -74,6 +74,8 @@
                                         <p>Sub total: <span id="subTotalInvoiceSummary"></span></p>
                                         <p>Discount: <span id="discountInvoiceSummary"></span></p>
                                         <h5 class="fw-bold">Grand Total: <span id="grandTotalInvoiceSummary"></span></h5>
+                                        <h5 class="fw-bold">Cash Paid: <span id="cashPaidSummary"></span></h5>
+                                        <h5 class="fw-bold">Balance: <span id="balanceSummary"></span></h5>
                                     </div>
                                 </div>
                             </div>
@@ -173,14 +175,14 @@
                                                 </td>
                                                 <td class="unit-price"></td>
                                                 <td>
-                                                    <input class="form-control quantity" type="number" placeholder="Quantity" disabled min="1"/>
+                                                    <input class="form-control quantity" type="number" placeholder="Quantity" disabled min="1" />
                                                     <span class="text-danger quantity-error" style="display: none;"></span>
                                                 </td>
                                                 <td><input class="form-control discount" type="number" placeholder="Discount" disabled min="0" /></td>
                                                 <td class="total">0</td>
                                                 <td><button type="button" class="btn btn-outline-secondary delete-row">Delete</button></td>
                                             </tr>
-                                         
+
                                         </tbody>
                                     </table>
 
@@ -189,13 +191,26 @@
                                     <div class="invoice-summary invoice-summary-input float-end">
                                         <p>Sub total: <span id="subTotal">0.00</span></p>
                                         <h5 class="fw-bold d-flex align-items-center">
-                                            Discount: <span><input class="form-control" id="discountInvoice" type="number" min="0" /></span>
+                                            Discount:
+                                            <span>
+                                                <input class="form-control" id="discountInvoice" type="number" min="0" style="margin-left:88px;width:52%" />
+                                            </span>
                                         </h5>
+                                        <p>Grand Total: <span id="grandTotal">0.00</span></p>
+
+                                        <!-- Cash Paid input -->
                                         <h5 class="fw-bold d-flex align-items-center">
-                                            Grand Total: <span id="grandTotal">0.00</span>
+                                            Cash Paid:
+                                            <span>
+                                                <input class="form-control" id="cashPaid" type="number" min="0" style="margin-left:88px;width:52%" />
+                                            </span>
                                         </h5>
+                                        <!-- Balance input -->
+                                        <p>Balance: <span id="balance">0.00</span></p>
+                                       
                                     </div>
                                 </div>
+
                             </div>
                         </form>
                         <!-- ==== / Edit Area =====-->
@@ -224,22 +239,36 @@
                 row.find('.total').text(total.toFixed(2));
                 updateInvoiceTotals();
             }
-            $('#discountInvoice').on('input', function () {
+            $('#discountInvoice, #cashPaid').on('input', function () {
                 updateInvoiceTotals();
             });
             function updateInvoiceTotals() {
                 var subTotal = 0;
 
+                // Calculate Sub Total from table rows
                 $('#invoice-table tbody tr').each(function () {
                     var rowTotal = parseFloat($(this).find('.total').text()) || 0;
                     subTotal += rowTotal;
                 });
 
+                // Get the discount value
                 var discount = parseFloat($('#discountInvoice').val()) || 0;
+
+                // Calculate Grand Total
                 var grandTotal = subTotal - discount;
 
+                // Display Sub Total and Grand Total
                 $('#subTotal').text(subTotal.toFixed(2));
                 $('#grandTotal').text(grandTotal.toFixed(2));
+
+                // Get the cash paid value
+                var cashPaid = parseFloat($('#cashPaid').val()) || 0;
+
+                // Calculate Balance
+                var balance = cashPaid - grandTotal;
+
+                // Display Balance
+                $('#balance').text(balance.toFixed(2));
             }
             $('#invoice-table').on('input', '.unit-price-input, .quantity, .discount', function () {
                 var row = $(this).closest('tr');
@@ -549,6 +578,9 @@
                 };
                 var instructions = $("#Instructions").val();
                 var SaleId = $("#hdnSaleId").val();
+                var cashPaid = $("#cashPaid").val() || 0;
+                var balance = $("#balance").text() || 0;
+
                 var postData = {
                     discount: discount,
                     orderNum: orderNum,
@@ -556,9 +588,10 @@
                     customer: customerData,
                     invoiceDetails: invoiceData,
                     instructions: instructions,
-                    SaleId: SaleId
+                    SaleId: SaleId,
+                    cashPaid: cashPaid,      // Add cash paid
+                    balance: balance         // Add balance
                 };
-
 
                 // Perform AJAX request to submit data
                 $.ajax({
@@ -673,6 +706,8 @@
                                 $('#subTotalInvoiceSummary').text(subTotal.toFixed(2));
                                 $('#discountInvoiceSummary').text(totalDiscount.toFixed(2));
                                 $('#grandTotalInvoiceSummary').text(grandTotal.toFixed(2));
+                                $('#cashPaidSummary').text(response.orderInfo.cashPaid.toFixed(2));
+                                $('#balanceSummary').text(response.orderInfo.balance.toFixed(2));
                             }
                         });
                     },

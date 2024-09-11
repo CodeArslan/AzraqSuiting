@@ -13,6 +13,8 @@ namespace AzraqSuiting.ViewModels
         public DateTime saleDate { get; set; } // Sale Date
         public int orderNum { get; set; }
         public decimal discount { get; set; }
+        public decimal CashPaid { get; set; }
+        public decimal Balance { get; set; }
         public CustomerViewModel Customer { get; set; }
         public List<InvoiceDetailViewModel> InvoiceDetails { get; set; }
 

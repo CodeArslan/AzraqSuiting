@@ -181,7 +181,9 @@ namespace AzraqSuiting.Controllers
                 customerName = sale.Customer.Name,
                 customerPhone = sale.Customer.PhoneNumber,
                 customerId=sale.Customer.Id,
-                instructions=sale.Instructions
+                instructions=sale.Instructions,
+                cashPaid=sale.CashPaid,
+                balance=sale.Balance
             };
 
             return orderInfo;
@@ -253,7 +255,8 @@ namespace AzraqSuiting.Controllers
                         sale.TotalAmount = CalculateTotalAmount(model.InvoiceDetails);
                         sale.CustomerId = customer.Id;
                         sale.Instructions = model.instructions;
-
+                        sale.CashPaid = model.CashPaid;
+                        sale.Balance = model.Balance;
                         // Remove existing sale details
                         var existingSaleDetails = _dbContext.SaleDetails.Where(sd => sd.SalesId == sale.Id);
                         _dbContext.SaleDetails.RemoveRange(existingSaleDetails);
@@ -269,6 +272,8 @@ namespace AzraqSuiting.Controllers
                             TotalAmount = CalculateTotalAmount(model.InvoiceDetails),
                             CustomerId = customer.Id,
                             Instructions= model.instructions,
+                            CashPaid=model.CashPaid,
+                            Balance=model.Balance
                         };
                         _dbContext.Sales.Add(sale);
                     }

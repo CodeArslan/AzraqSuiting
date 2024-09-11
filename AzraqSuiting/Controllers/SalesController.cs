@@ -58,6 +58,8 @@ namespace AzraqSuiting.Controllers
                 Date = s.Date.ToString("yyyy-MM-dd"), // Format date as needed
                 Discount = s.Discount,
                 TotalAmount = s.TotalAmount,
+                cashPaid=s.CashPaid,
+                balance=s.Balance,
                 Id = s.Id
             }).ToList();
 
@@ -398,6 +400,40 @@ namespace AzraqSuiting.Controllers
 
             return Json(new { saleDetails }, JsonRequestBehavior.AllowGet);
         }
+        [HttpPost]
+        public JsonResult UpdateSalesField(int id, string fieldName, decimal newValue)
+        {
+            try
+            {
+                var sale = _dbContext.Sales.Find(id);
+                if (sale == null)
+                {
+                    return Json(new { success = false, message = "Sale not found." });
+                }
+
+                // Update the specified field
+                switch (fieldName)
+                {
+                    case "cashPaid":
+                        sale.CashPaid = newValue;
+                        break;
+                    case "balance":
+                        sale.Balance = newValue;
+                        break;
+                    default:
+                        return Json(new { success = false, message = "Invalid field name." });
+                }
+
+                _dbContext.SaveChanges();
+                return Json(new { success = true });
+            }
+            catch (Exception ex)
+            {
+                // Log the exception
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
 
     }
 }

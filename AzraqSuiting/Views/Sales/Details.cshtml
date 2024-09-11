@@ -41,7 +41,9 @@
                             <th scope="col">Customer</th>
                             <th scope="col">Date</th>
                             <th scope="col">Discount</th>
-                            <th scope="col">Total Ammount</th>
+                            <th scope="col">Total Amount</th>
+                            <th scope="col">Cash Paid</th>
+                            <th scope="col">Balance</th>
                             <th scope="col">Action</th>
                         </tr>
                     </thead>
@@ -78,6 +80,18 @@
                     },
                     { "data": "Discount" },
                     { "data": "TotalAmount" },
+                    {
+                        "data": "cashPaid",
+                        "render": function (data, type, row) {
+                            return `<span class='editable' data-field='cashPaid' data-id='${row.Id}'>${data}</span>`;
+                        }
+                    },
+                    {
+                        "data": "balance",
+                        "render": function (data, type, row) {
+                            return `<span class='editable' data-field='balance' data-id='${row.Id}'>${data}</span>`;
+                        }
+                    },
                     {
                         "data": "Id",
                         "render": function (data) {
@@ -158,6 +172,64 @@
                     }
                 });
             });
+            $('#salesTable').on('dblclick', 'td', function () {
+                var $this = $(this);
+
+                // Check if the cell contains editable content
+                var $editable = $this.find('.editable');
+
+                if ($editable.length) {
+                    var currentValue = $editable.text();
+                    var field = $editable.data('field');
+                    var id = $editable.data('id');
+
+                    // Only proceed if it's not already in edit mode
+                    if (!$this.hasClass('editing')) {
+                        $this.addClass('editing'); // Mark cell as being edited
+
+                        // Replace text with an input field
+                        var input = $('<input type="number" min="0" class="form-control" />').val(currentValue);
+                        $editable.html(input);
+
+                        // Focus on the input field
+                        input.focus();
+
+                        // Handle saving when input loses focus
+                        input.on('blur', function () {
+                            var newValue = $(this).val();
+
+                            // Send AJAX request to update value on the server
+                            $.ajax({
+                                url: '/Sales/UpdateSalesField',
+                                method: 'POST',
+                                data: {
+                                    id: id,
+                                    fieldName: field,
+                                    newValue: newValue
+                                },
+                                success: function (response) {
+                                    // Update the text after saving
+                                    $editable.text(newValue);
+                                },
+                                error: function () {
+                                    alert('Error updating field.');
+                                    // Revert to the original value if there's an error
+                                    $editable.text(currentValue);
+                                }
+                            });
+                            $this.removeClass('editing'); // Remove edit mode mark
+                        });
+
+                        // Optionally, handle pressing Enter to save
+                        input.on('keypress', function (e) {
+                            if (e.which === 13) { // Enter key
+                                $(this).blur(); // Trigger blur event
+                            }
+                        });
+                    }
+                }
+            });
+
         });
     </script>
 }

@@ -103,7 +103,6 @@ namespace AzraqSuiting.Controllers
                 catch (Exception ex)
                 {
                     transaction.Rollback();
-                    // Log the exception (you can use a logging framework)
                     return Json(new { success = false, message = "An error occurred while deleting the sale and updating the inventory." });
                 }
             }
@@ -146,7 +145,6 @@ namespace AzraqSuiting.Controllers
                 var orderInfo = GetOrderInfo(saleId); 
                 var saleDetails = GetSalesInformation(saleId); 
 
-                // Example data structure to return
                 var data = new
                 {
                     orderInfo = orderInfo,
@@ -162,11 +160,10 @@ namespace AzraqSuiting.Controllers
             }
         }
 
-        // Example method to fetch order info based on saleId
         private object GetOrderInfo(int saleId)
         {
             var sale = _dbContext.Sales
-                                .Include(s => s.Customer) // Include Customer navigation property
+                                .Include(s => s.Customer) 
                                 .FirstOrDefault(s => s.Id == saleId);
 
             if (sale == null)
@@ -174,7 +171,6 @@ namespace AzraqSuiting.Controllers
                 throw new Exception("Sale not found");
             }
 
-            // Fetch order information including customer details
             var orderInfo = new
             {
                 cumulativeDiscount=sale.Discount,
@@ -191,10 +187,8 @@ namespace AzraqSuiting.Controllers
             return orderInfo;
         }
 
-        // Example method to fetch sale details based on saleId
         private object GetSalesInformation(int saleId)
         {
-            // Replace with actual logic to fetch sale details
             var saleDetails = _dbContext.SaleDetails
                 .Where(sd => sd.SalesId == saleId)
                 .Select(sd => new
@@ -231,7 +225,6 @@ namespace AzraqSuiting.Controllers
                     }
                     else
                     {
-                        // Create a new customer
                         customer = new Customer
                         {
                             Name = model.Customer.customerName,
@@ -241,7 +234,7 @@ namespace AzraqSuiting.Controllers
                         _dbContext.SaveChanges();
                     }
 
-                    // Check if we're updating an existing sale or creating a new one
+                   
                     Sales sale;
                     if (model.SaleId>0)
                     {
@@ -250,7 +243,6 @@ namespace AzraqSuiting.Controllers
                         {
                             return Json(new { success = false, message = "Sale record not found." });
                         }
-                        // Update existing sale
                         sale.Discount = model.discount;
                         sale.OrderNumber = model.orderNum;
                         sale.Date = model.saleDate;
@@ -259,13 +251,12 @@ namespace AzraqSuiting.Controllers
                         sale.Instructions = model.instructions;
                         sale.CashPaid = model.CashPaid;
                         sale.Balance = model.Balance;
-                        // Remove existing sale details
+                      
                         var existingSaleDetails = _dbContext.SaleDetails.Where(sd => sd.SalesId == sale.Id);
                         _dbContext.SaleDetails.RemoveRange(existingSaleDetails);
                     }
                     else
                     {
-                        // Create new sales record
                         sale = new Sales
                         {
                             Discount = model.discount,
@@ -282,7 +273,6 @@ namespace AzraqSuiting.Controllers
                     
                     _dbContext.SaveChanges();
 
-                    // Add new sale details
                     foreach (var detail in model.InvoiceDetails)
                     {
                         var saleDetail = new SaleDetails
@@ -313,13 +303,11 @@ namespace AzraqSuiting.Controllers
             }
             else
             {
-                // Return validation errors if ModelState is not valid
                 return Json(new { success = false, message = "Model State Not Valid" });
             }
         }
 
 
-        // Helper method to calculate total amount based on invoice details
         private decimal CalculateTotalAmount(List<InvoiceDetailViewModel> invoiceDetails)
         {
             decimal total = 0;
@@ -338,12 +326,9 @@ namespace AzraqSuiting.Controllers
                     var product = await _dbContext.Product.FindAsync(detail.productId);
                     if (product != null)
                     {
-                        // Get all sales details for the product asynchronously
                         var salesDetailsForProduct = await _dbContext.SaleDetails
                                                             .Where(sd => sd.ProductId == detail.productId)
                                                             .ToListAsync();
-
-                        // Calculate total cost and total quantity from sales details
                         decimal totalCost = 0;
                         int totalQuantity = 0;
 
@@ -353,17 +338,13 @@ namespace AzraqSuiting.Controllers
                             totalQuantity += saleDetail.Quantity;
                         }
 
-                        // Add the current sale's contribution to total cost and quantity
                         totalCost += detail.unitPrice * detail.Quantity;
                         totalQuantity += detail.Quantity;
 
-                        // Calculate new average cost
                         decimal newAverageCost = totalCost / totalQuantity;
 
-                        // Update product's average cost
                         product.AverageCost = newAverageCost;
 
-                        // Deduct meters per suit from product's current stock
                         decimal metersToDeduct = detail.Quantity * product.MeterPerSuit;
                         product.CurrentStock -= metersToDeduct;
 
@@ -372,7 +353,7 @@ namespace AzraqSuiting.Controllers
                 }
             }
 
-            await _dbContext.SaveChangesAsync(); // Save changes asynchronously
+            await _dbContext.SaveChangesAsync(); 
         }
 
 
@@ -411,7 +392,6 @@ namespace AzraqSuiting.Controllers
                     return Json(new { success = false, message = "Sale not found." });
                 }
 
-                // Update the specified field
                 switch (fieldName)
                 {
                     case "cashPaid":
@@ -429,7 +409,6 @@ namespace AzraqSuiting.Controllers
             }
             catch (Exception ex)
             {
-                // Log the exception
                 return Json(new { success = false, message = ex.Message });
             }
         }

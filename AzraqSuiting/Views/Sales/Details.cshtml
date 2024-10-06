@@ -175,7 +175,6 @@
             $('#salesTable').on('dblclick', 'td', function () {
                 var $this = $(this);
 
-                // Check if the cell contains editable content
                 var $editable = $this.find('.editable');
 
                 if ($editable.length) {
@@ -183,22 +182,18 @@
                     var field = $editable.data('field');
                     var id = $editable.data('id');
 
-                    // Only proceed if it's not already in edit mode
                     if (!$this.hasClass('editing')) {
-                        $this.addClass('editing'); // Mark cell as being edited
+                        $this.addClass('editing'); 
 
-                        // Replace text with an input field
                         var input = $('<input type="number" min="0" class="form-control" />').val(currentValue);
                         $editable.html(input);
 
-                        // Focus on the input field
                         input.focus();
 
-                        // Handle saving when input loses focus
                         input.on('blur', function () {
                             var newValue = $(this).val();
 
-                            // Send AJAX request to update value on the server
+                          
                             $.ajax({
                                 url: '/Sales/UpdateSalesField',
                                 method: 'POST',
@@ -217,13 +212,12 @@
                                     $editable.text(currentValue);
                                 }
                             });
-                            $this.removeClass('editing'); // Remove edit mode mark
+                            $this.removeClass('editing'); 
                         });
 
-                        // Optionally, handle pressing Enter to save
                         input.on('keypress', function (e) {
-                            if (e.which === 13) { // Enter key
-                                $(this).blur(); // Trigger blur event
+                            if (e.which === 13) { 
+                                $(this).blur(); 
                             }
                         });
                     }
